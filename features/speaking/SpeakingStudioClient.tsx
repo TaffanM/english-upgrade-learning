@@ -290,27 +290,27 @@ export function SpeakingStudioClient({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-up">
       {/* Top Header */}
       <div className="flex items-center justify-between">
-        <Button asChild variant="ghost" size="sm">
+        <Button asChild variant="ghost" size="sm" className="rounded-xl pressable">
           <Link href={`/challenge/${dayNumber}`}>
             <ArrowLeft className="mr-1.5 size-4" /> Back to Day {dayNumber}
           </Link>
         </Button>
 
-        <Badge variant="outline" className="font-mono text-xs">
+        <Badge variant="speaking" className="font-mono text-xs">
           Target Duration: 15 minutes
         </Badge>
       </div>
 
       {/* Speaking Prompt Card */}
-      <Card className="border-l-4 border-l-blue-500">
+      <Card className="border-2 border-blue-200/80 dark:border-blue-900/60 rounded-3xl card-hover-lift">
         <CardHeader>
-          <Badge variant="outline" className="w-fit text-xs font-mono mb-1">
+          <Badge variant="speaking" className="w-fit text-xs font-mono mb-1 animate-scale-in">
             Day {dayNumber} • Speaking Activity
           </Badge>
-          <CardTitle className="text-xl">{activity.prompt}</CardTitle>
+          <CardTitle className="text-xl font-bold">{activity.prompt}</CardTitle>
           {activity.instructions && (
             <CardDescription className="text-xs text-foreground/80 mt-1">
               <strong>Routine Instruction:</strong> {activity.instructions}
@@ -321,9 +321,9 @@ export function SpeakingStudioClient({
 
       {/* Tabs: Recorder & Attempts */}
       <Tabs defaultValue="recorder" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="recorder">Speaking Studio</TabsTrigger>
-          <TabsTrigger value="history" className="flex items-center gap-1.5">
+        <TabsList className="rounded-xl">
+          <TabsTrigger value="recorder" className="rounded-lg">Speaking Studio</TabsTrigger>
+          <TabsTrigger value="history" className="flex items-center gap-1.5 rounded-lg">
             <History className="size-3.5" />
             Saved Recordings ({submittedAttempts.length})
           </TabsTrigger>
@@ -332,25 +332,25 @@ export function SpeakingStudioClient({
         {/* Studio Tab */}
         <TabsContent value="recorder" className="space-y-6 mt-0">
           {/* Recorder Interface Card */}
-          <Card className="border shadow-xs">
+          <Card className="border-2 border-border/80 rounded-3xl shadow-xs overflow-hidden">
             <CardContent className="p-8 flex flex-col items-center justify-center text-center space-y-6">
               {/* Duration Counter */}
-              <div className="font-mono text-4xl font-bold tracking-tight text-foreground">
+              <div className="font-mono text-5xl font-black tracking-tight text-foreground transition-all">
                 {formatSeconds(recordingSeconds)}
               </div>
 
               {/* Status indicator */}
               <div className="flex items-center gap-2 text-xs">
                 {recorderState === "recording" && (
-                  <span className="flex items-center gap-1.5 text-red-500 font-semibold animate-pulse">
-                    <span className="size-2 rounded-full bg-red-500 inline-block" /> Recording live audio...
+                  <span className="flex items-center gap-1.5 text-red-500 font-bold animate-pulse">
+                    <span className="size-2.5 rounded-full bg-red-500 inline-block animate-ping" /> Recording live audio...
                   </span>
                 )}
                 {recorderState === "paused" && (
-                  <span className="text-amber-500 font-semibold">Recording paused</span>
+                  <span className="text-amber-500 font-bold">Recording paused</span>
                 )}
                 {recorderState === "reviewing" && (
-                  <span className="text-emerald-600 font-semibold flex items-center gap-1">
+                  <span className="text-emerald-600 font-bold flex items-center gap-1">
                     <CheckCircle2 className="size-3.5" /> Recording ready for playback review
                   </span>
                 )}
@@ -366,19 +366,19 @@ export function SpeakingStudioClient({
                 <Button
                   size="lg"
                   onClick={startRecording}
-                  className="rounded-full size-20 p-0 bg-blue-600 hover:bg-blue-700 shadow-md transition-transform hover:scale-105"
+                  className="rounded-full size-22 p-0 bg-blue-600 hover:bg-blue-700 shadow-md pressable animate-breathe"
                 >
-                  <Mic className="size-8 text-white" />
+                  <Mic className="size-9 text-white" />
                 </Button>
               )}
 
               {(recorderState === "recording" || recorderState === "paused") && (
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-5 animate-scale-in">
                   {recorderState === "recording" ? (
                     <Button
                       variant="outline"
                       size="icon"
-                      className="size-14 rounded-full"
+                      className="size-14 rounded-full pressable"
                       onClick={pauseRecording}
                       title="Pause"
                     >
@@ -388,7 +388,7 @@ export function SpeakingStudioClient({
                     <Button
                       variant="outline"
                       size="icon"
-                      className="size-14 rounded-full"
+                      className="size-14 rounded-full pressable"
                       onClick={resumeRecording}
                       title="Resume"
                     >
@@ -398,21 +398,21 @@ export function SpeakingStudioClient({
 
                   <Button
                     size="icon"
-                    className="size-14 rounded-full bg-red-600 hover:bg-red-700"
+                    className="size-16 rounded-full bg-red-600 hover:bg-red-700 shadow-md pressable animate-pulse-recording"
                     onClick={stopRecording}
                     title="Stop & Review"
                   >
-                    <Square className="size-6 fill-white text-white" />
+                    <Square className="size-7 fill-white text-white" />
                   </Button>
                 </div>
               )}
 
               {/* Reviewing State: Audio Player & Submit */}
               {recorderState === "reviewing" && audioUrl && (
-                <div className="w-full max-w-md space-y-4">
-                  <div className="bg-muted/50 p-4 rounded-xl border flex flex-col items-center gap-3">
+                <div className="w-full max-w-md space-y-4 animate-scale-in">
+                  <div className="bg-secondary/60 p-4 rounded-2xl border flex flex-col items-center gap-3">
                     <audio src={audioUrl} controls className="w-full h-10" />
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground font-mono">
                       Duration: {formatSeconds(audioDuration)}
                     </span>
                   </div>
@@ -423,6 +423,7 @@ export function SpeakingStudioClient({
                       size="sm"
                       onClick={discardRecording}
                       disabled={isPending}
+                      className="rounded-xl pressable"
                     >
                       <RotateCcw className="size-3.5 mr-1.5" /> Re-record
                     </Button>
@@ -431,10 +432,10 @@ export function SpeakingStudioClient({
                       size="sm"
                       onClick={handleSubmitRecording}
                       disabled={isPending}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                      className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl pressable shadow-xs font-semibold"
                     >
                       <Send className="size-3.5 mr-1.5" />
-                      {isPending ? "Uploading..." : "Submit Recording"}
+                      {isPending ? "Uploading..." : "Submit Recording 🚀"}
                     </Button>
                   </div>
                 </div>

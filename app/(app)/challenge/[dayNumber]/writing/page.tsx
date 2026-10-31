@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ErrorFallback } from "@/components/ui/error-fallback";
 import { WritingStudioClient } from "@/features/writing/WritingStudioClient";
 
-export default async function WritingStudioPage({
+async function WritingStudioContent({
   params,
 }: {
   params: Promise<{ dayNumber: string }>;
@@ -24,26 +26,38 @@ export default async function WritingStudioPage({
   }
 
   // Fetch challenge day
-  const { data: day } = await supabase
+  const { data: day, error: dayError } = await supabase
     .from("challenge_days")
     .select("*")
     .eq("day_number", dayNum)
-    .single();
+    .maybeSingle();
 
-  if (!day) {
-    notFound();
+  if (dayError || !day) {
+    return (
+      <ErrorFallback
+        title={`Day ${dayNum} Not Found`}
+        description="We couldn't retrieve the challenge day records from the database."
+        error={dayError}
+      />
+    );
   }
 
   // Fetch writing activity
-  const { data: activity } = await supabase
+  const { data: activity, error: activityError } = await supabase
     .from("activities")
     .select("*")
     .eq("challenge_day_id", day.id)
     .eq("activity_type", "writing")
-    .single();
+    .maybeSingle();
 
-  if (!activity) {
-    notFound();
+  if (activityError || !activity) {
+    return (
+      <ErrorFallback
+        title="Writing Prompt Unavailable"
+        description={`We couldn't retrieve the writing prompt for Day ${dayNum} from the database.`}
+        error={activityError}
+      />
+    );
   }
 
   // Fetch checklist items and submissions
@@ -75,15 +89,27 @@ export default async function WritingStudioPage({
   const completedChecklistIds = completions?.map((c) => c.checklist_item_id) ?? [];
 
   return (
+    <WritingStudioClient
+      dayNumber={dayNum}
+      activity={activity}
+      checklistItems={checklistItems || []}
+      activeDraft={activeDraft}
+      submittedAttempts={submittedAttempts}
+      completedChecklistIds={completedChecklistIds}
+    />
+  );
+}
+
+export default function WritingStudioPage({
+  params,
+}: {
+  params: Promise<{ dayNumber: string }>;
+}) {
+  return (
     <div className="max-w-4xl mx-auto">
-      <WritingStudioClient
-        dayNumber={dayNum}
-        activity={activity}
-        checklistItems={checklistItems || []}
-        activeDraft={activeDraft}
-        submittedAttempts={submittedAttempts}
-        completedChecklistIds={completedChecklistIds}
-      />
+      <Suspense fallback={<div className="h-96 rounded-3xl bg-card border animate-pulse" />}>
+        <WritingStudioContent params={params} />
+      </Suspense>
     </div>
   );
 }

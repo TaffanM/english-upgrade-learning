@@ -1,23 +1,22 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { calculateChallengeStats } from "@/lib/utils/progression";
+import { ErrorFallback } from "@/components/ui/error-fallback";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScoreTrendsChart } from "@/features/progress/ScoreTrendsChart";
 import {
   Award,
-  BookOpen,
   Calendar,
   CheckCircle2,
-  Clock,
   Mic,
   PenLine,
   ShieldCheck,
-  TrendingUp,
 } from "lucide-react";
 
-export default async function ProgressPage() {
+async function ProgressContent() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -29,7 +28,7 @@ export default async function ProgressPage() {
 
   // Fetch days, progress, submissions, and weekly reviews
   const [
-    { data: days = [] },
+    { data: days, error: daysError },
     { data: progressList = [] },
     { data: submissions = [] },
     { data: weeklyReviews = [] },
@@ -48,7 +47,17 @@ export default async function ProgressPage() {
       .order("created_at", { ascending: true }),
   ]);
 
-  const stats = calculateChallengeStats(days || [], progressList || []);
+  if (daysError || !days || days.length === 0) {
+    return (
+      <ErrorFallback
+        title="Couldn't Load Analytics"
+        description="We couldn't retrieve your challenge statistics and activity volume from the database. Please check your connection and retry."
+        error={daysError}
+      />
+    );
+  }
+
+  const stats = calculateChallengeStats(days, progressList || []);
 
   // Compute total words written & audio minutes
   const totalWords = (submissions || []).reduce(
@@ -95,17 +104,7 @@ export default async function ProgressPage() {
   ];
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto">
-      {/* Page Header */}
-      <div className="space-y-1">
-        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-          Progress & Performance Analytics
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Track your productive English output, word count volume, speaking duration, and self-assessment trajectory.
-        </p>
-      </div>
-
+    <div className="space-y-8">
       {/* Top 4 KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card className="bg-card">
@@ -213,6 +212,37 @@ export default async function ProgressPage() {
           ))}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+export default function ProgressPage() {
+  return (
+    <div className="space-y-8 max-w-5xl mx-auto animate-fade-up">
+      {/* Page Header */}
+      <div className="space-y-1">
+        <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+          Progress & Performance Analytics
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Track your productive English output, word count volume, speaking duration, and self-assessment trajectory.
+        </p>
+      </div>
+
+      <Suspense
+        fallback={
+          <div className="space-y-6 animate-pulse">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-28 rounded-2xl bg-card border border-border/60" />
+              ))}
+            </div>
+            <div className="h-72 rounded-2xl bg-card border border-border/60" />
+          </div>
+        }
+      >
+        <ProgressContent />
+      </Suspense>
     </div>
   );
 }

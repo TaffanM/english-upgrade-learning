@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ErrorFallback } from "@/components/ui/error-fallback";
 import { WeeklyReviewClient } from "@/features/reviews/WeeklyReviewClient";
 
-export default async function WeeklyReviewDetailPage({
+async function WeeklyReviewDetailContent({
   params,
 }: {
   params: Promise<{ phaseNumber: string }>;
@@ -24,17 +26,23 @@ export default async function WeeklyReviewDetailPage({
   }
 
   // Fetch challenge & phase
-  const [{ data: challenge }, { data: phase }] = await Promise.all([
+  const [{ data: challenge, error: challengeError }, { data: phase, error: phaseError }] = await Promise.all([
     supabase
       .from("challenges")
       .select("id")
       .eq("slug", "41-day-english-upgrade")
-      .single(),
-    supabase.from("phases").select("*").eq("phase_number", phaseNum).single(),
+      .maybeSingle(),
+    supabase.from("phases").select("*").eq("phase_number", phaseNum).maybeSingle(),
   ]);
 
-  if (!challenge || !phase) {
-    notFound();
+  if (challengeError || phaseError || !challenge || !phase) {
+    return (
+      <ErrorFallback
+        title={`Phase ${phaseNum} Review Unavailable`}
+        description="We couldn't retrieve the weekly review phase details from the database."
+        error={challengeError || phaseError}
+      />
+    );
   }
 
   // Fetch existing review for this user & phase
@@ -106,17 +114,29 @@ export default async function WeeklyReviewDetailPage({
   }
 
   return (
+    <WeeklyReviewClient
+      phase={phase}
+      challengeId={challenge.id}
+      existingReview={existingReview}
+      isFinalPhase={phaseNum === 6}
+      day1Writing={day1Writing}
+      day41Writing={day41Writing}
+      day1AudioPath={day1AudioPath}
+      day41AudioPath={day41AudioPath}
+    />
+  );
+}
+
+export default function WeeklyReviewDetailPage({
+  params,
+}: {
+  params: Promise<{ phaseNumber: string }>;
+}) {
+  return (
     <div className="max-w-3xl mx-auto">
-      <WeeklyReviewClient
-        phase={phase}
-        challengeId={challenge.id}
-        existingReview={existingReview}
-        isFinalPhase={phaseNum === 6}
-        day1Writing={day1Writing}
-        day41Writing={day41Writing}
-        day1AudioPath={day1AudioPath}
-        day41AudioPath={day41AudioPath}
-      />
+      <Suspense fallback={<div className="h-96 rounded-3xl bg-card border animate-pulse" />}>
+        <WeeklyReviewDetailContent params={params} />
+      </Suspense>
     </div>
   );
 }

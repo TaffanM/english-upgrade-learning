@@ -1,7 +1,9 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { isDayComplete } from "@/lib/utils/progression";
+import { ErrorFallback } from "@/components/ui/error-fallback";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +27,7 @@ type ChecklistItem = Database["public"]["Tables"]["checklist_items"]["Row"];
 type Submission = Database["public"]["Tables"]["activity_submissions"]["Row"];
 type DailyProgress = Database["public"]["Tables"]["daily_progress"]["Row"];
 
-export default async function DayDetailPage({
+async function DayDetailContent({
   params,
 }: {
   params: Promise<{ dayNumber: string }>;
@@ -47,21 +49,27 @@ export default async function DayDetailPage({
   }
 
   // Fetch challenge day and phase
-  const { data: dayData } = await supabase
+  const { data: dayData, error: dayError } = await supabase
     .from("challenge_days")
     .select("*, phases(*)")
     .eq("day_number", dayNum)
-    .single();
+    .maybeSingle();
 
-  if (!dayData) {
-    notFound();
+  if (dayError || !dayData) {
+    return (
+      <ErrorFallback
+        title={`Day ${dayNum} Not Found`}
+        description="We couldn't retrieve the curriculum details for this day from the database. Please check your connection and retry."
+        error={dayError}
+      />
+    );
   }
   const day = dayData as ChallengeDay;
 
   // Fetch activities, checklist items, and progress
   const [
-    { data: activitiesData },
-    { data: checklistData },
+    { data: activitiesData, error: activitiesError },
+    { data: checklistData, error: checklistError },
     { data: progressData },
   ] = await Promise.all([
     supabase
@@ -82,7 +90,17 @@ export default async function DayDetailPage({
       .maybeSingle(),
   ]);
 
-  const activities: Activity[] = activitiesData ?? [];
+  if (activitiesError || !activitiesData || activitiesData.length === 0) {
+    return (
+      <ErrorFallback
+        title={`Couldn't Load Day ${dayNum} Activities`}
+        description="The speaking and writing activities for this day could not be retrieved from the database."
+        error={activitiesError}
+      />
+    );
+  }
+
+  const activities: Activity[] = activitiesData;
   const checklistItems: ChecklistItem[] = checklistData ?? [];
   const progress: DailyProgress | null = progressData ?? null;
 
@@ -112,7 +130,7 @@ export default async function DayDetailPage({
   const dayCompleted = isDayComplete(progress);
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
+    <div className="space-y-6 max-w-4xl mx-auto animate-fade-up">
       {/* Back button & Breadcrumb */}
       <div className="flex items-center justify-between">
         <Button asChild variant="ghost" size="sm">
@@ -312,5 +330,27 @@ export default async function DayDetailPage({
         </Card>
       )}
     </div>
+  );
+}
+
+export default function DayDetailPage({
+  params,
+}: {
+  params: Promise<{ dayNumber: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6 max-w-4xl mx-auto animate-pulse">
+          <div className="h-44 rounded-2xl bg-card border" />
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="h-64 rounded-2xl bg-card border" />
+            <div className="h-64 rounded-2xl bg-card border" />
+          </div>
+        </div>
+      }
+    >
+      <DayDetailContent params={params} />
+    </Suspense>
   );
 }

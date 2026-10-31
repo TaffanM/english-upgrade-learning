@@ -1,8 +1,10 @@
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { ErrorFallback } from "@/components/ui/error-fallback";
 import { SpeakingStudioClient } from "@/features/speaking/SpeakingStudioClient";
 
-export default async function SpeakingStudioPage({
+async function SpeakingStudioContent({
   params,
 }: {
   params: Promise<{ dayNumber: string }>;
@@ -24,33 +26,45 @@ export default async function SpeakingStudioPage({
   }
 
   // Fetch challenge and day
-  const [{ data: challenge }, { data: day }] = await Promise.all([
+  const [{ data: challenge, error: challengeError }, { data: day, error: dayError }] = await Promise.all([
     supabase
       .from("challenges")
       .select("id")
       .eq("slug", "41-day-english-upgrade")
-      .single(),
+      .maybeSingle(),
     supabase
       .from("challenge_days")
       .select("*")
       .eq("day_number", dayNum)
-      .single(),
+      .maybeSingle(),
   ]);
 
-  if (!day || !challenge) {
-    notFound();
+  if (challengeError || dayError || !day || !challenge) {
+    return (
+      <ErrorFallback
+        title={`Day ${dayNum} Not Found`}
+        description="We couldn't retrieve the challenge day records from the database."
+        error={challengeError || dayError}
+      />
+    );
   }
 
   // Fetch speaking activity
-  const { data: activity } = await supabase
+  const { data: activity, error: activityError } = await supabase
     .from("activities")
     .select("*")
     .eq("challenge_day_id", day.id)
     .eq("activity_type", "speaking")
-    .single();
+    .maybeSingle();
 
-  if (!activity) {
-    notFound();
+  if (activityError || !activity) {
+    return (
+      <ErrorFallback
+        title="Speaking Studio Unavailable"
+        description={`We couldn't retrieve the speaking activity for Day ${dayNum} from the database.`}
+        error={activityError}
+      />
+    );
   }
 
   // Fetch speaking submissions
@@ -62,14 +76,26 @@ export default async function SpeakingStudioPage({
     .order("attempt_number", { ascending: false });
 
   return (
+    <SpeakingStudioClient
+      dayNumber={dayNum}
+      challengeId={challenge.id}
+      userId={user.id}
+      activity={activity}
+      submittedAttempts={submissions || []}
+    />
+  );
+}
+
+export default function SpeakingStudioPage({
+  params,
+}: {
+  params: Promise<{ dayNumber: string }>;
+}) {
+  return (
     <div className="max-w-4xl mx-auto">
-      <SpeakingStudioClient
-        dayNumber={dayNum}
-        challengeId={challenge.id}
-        userId={user.id}
-        activity={activity}
-        submittedAttempts={submissions || []}
-      />
+      <Suspense fallback={<div className="h-96 rounded-3xl bg-card border animate-pulse" />}>
+        <SpeakingStudioContent params={params} />
+      </Suspense>
     </div>
   );
 }

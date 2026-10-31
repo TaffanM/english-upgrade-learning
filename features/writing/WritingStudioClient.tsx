@@ -200,26 +200,26 @@ export function WritingStudioClient({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-up">
       {/* Top Header & Breadcrumb */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <Button asChild variant="ghost" size="sm">
+        <Button asChild variant="ghost" size="sm" className="rounded-xl pressable">
           <Link href={`/challenge/${dayNumber}`}>
             <ArrowLeft className="mr-1.5 size-4" /> Back to Day {dayNumber}
           </Link>
         </Button>
 
         {/* 15-Minute Session Timer */}
-        <div className="flex items-center gap-2 bg-card border rounded-lg px-3 py-1.5 shadow-2xs">
-          <Clock className="size-4 text-primary" />
-          <span className="font-mono font-semibold text-sm">
+        <div className={`flex items-center gap-2 bg-card border rounded-2xl px-3.5 py-1.5 shadow-2xs transition-all ${isTimerRunning ? "border-primary/50 animate-breathe" : "border-border/80"}`}>
+          <Clock className={`size-4 ${isTimerRunning ? "text-primary animate-pulse" : "text-muted-foreground"}`} />
+          <span className="font-mono font-bold text-sm">
             {formatTime(timerSeconds)}
           </span>
-          <div className="flex items-center gap-1 border-l pl-2 ml-1">
+          <div className="flex items-center gap-1 border-l border-border/80 pl-2 ml-1">
             <Button
               variant="ghost"
               size="icon"
-              className="size-7"
+              className="size-7 rounded-lg pressable"
               onClick={() => setIsTimerRunning(!isTimerRunning)}
               title={isTimerRunning ? "Pause Timer" : "Start 15m Timer"}
             >
@@ -228,7 +228,7 @@ export function WritingStudioClient({
             <Button
               variant="ghost"
               size="icon"
-              className="size-7"
+              className="size-7 rounded-lg pressable"
               onClick={() => {
                 setIsTimerRunning(false);
                 setTimerSeconds(15 * 60);
@@ -242,7 +242,7 @@ export function WritingStudioClient({
       </div>
 
       {/* Pedagogical Banner (FR-039) */}
-      <div className="bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 rounded-xl p-3.5 flex items-start gap-3 text-xs leading-relaxed">
+      <div className="bg-amber-100/60 dark:bg-amber-950/40 border border-amber-300/60 dark:border-amber-800/60 text-amber-900 dark:text-amber-200 rounded-2xl p-4 flex items-start gap-3 text-xs leading-relaxed animate-fade-up stagger-1">
         <Info className="size-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
         <div>
           <strong>Authentic Practice Rule:</strong> Draft directly in English without using an external translator or automated grammar fixer. Practice retrieving your active vocabulary first. Use tools and checklists only after your first attempt.
@@ -250,19 +250,19 @@ export function WritingStudioClient({
       </div>
 
       {/* Task Prompt Card */}
-      <Card className="border-l-4 border-l-emerald-500">
+      <Card className="border-2 border-emerald-200/80 dark:border-emerald-900/60 rounded-3xl card-hover-lift animate-fade-up stagger-2">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <Badge variant="outline" className="font-mono text-xs">
+            <Badge variant="writing" className="font-mono text-xs">
               Day {dayNumber} • Writing Task
             </Badge>
             {activity.target_word_count && (
-              <Badge className="font-mono text-xs">
+              <Badge variant="cute" className="font-mono text-xs">
                 Target: {activity.target_word_count} words
               </Badge>
             )}
           </div>
-          <CardTitle className="text-xl mt-1">{activity.prompt}</CardTitle>
+          <CardTitle className="text-xl font-bold mt-1">{activity.prompt}</CardTitle>
           {activity.instructions && (
             <CardDescription className="text-xs text-foreground/80 mt-1">
               <strong>Writing Action:</strong> {activity.instructions}
