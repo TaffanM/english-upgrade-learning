@@ -27,6 +27,7 @@ import {
   Clock,
   History,
   Info,
+  Loader2,
   Pause,
   Play,
   RotateCcw,
@@ -68,6 +69,7 @@ export function WritingStudioClient({
     activeDraft ? "Draft loaded" : submittedAttempts.length ? "Submitted attempt loaded" : "Ready"
   );
   const [lastSavedContent, setLastSavedContent] = useState<string>(content);
+  const [isSavingDraft, setIsSavingDraft] = useState<boolean>(false);
 
   // Timer state (15 minutes = 900 seconds)
   const [timerSeconds, setTimerSeconds] = useState<number>(15 * 60);
@@ -137,23 +139,31 @@ export function WritingStudioClient({
 
   // Manual save draft handler
   const handleManualSave = async () => {
+    setIsSavingDraft(true);
     setSaveStatus("Saving draft...");
-    const res = await saveWritingDraftAction({
-      activityId: activity.id,
-      textContent: content,
-    });
-
-    if (res.success) {
-      setLastSavedContent(content);
-      const timeStr = new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
+    try {
+      const res = await saveWritingDraftAction({
+        activityId: activity.id,
+        textContent: content,
       });
-      setSaveStatus(`Draft saved at ${timeStr}`);
-      toast.success("Draft saved successfully");
-    } else {
+
+      if (res.success) {
+        setLastSavedContent(content);
+        const timeStr = new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        setSaveStatus(`Draft saved at ${timeStr}`);
+        toast.success("Draft saved successfully");
+      } else {
+        setSaveStatus("Error saving draft");
+        toast.error(res.error || "Failed to save draft");
+      }
+    } catch {
       setSaveStatus("Error saving draft");
-      toast.error(res.error || "Failed to save draft");
+      toast.error("Failed to save draft");
+    } finally {
+      setIsSavingDraft(false);
     }
   };
 
@@ -196,7 +206,17 @@ export function WritingStudioClient({
     }
     setCheckedIds(updated);
 
-    await toggleChecklistItemAction(itemId, checked);
+    const res = await toggleChecklistItemAction(itemId, checked);
+    if (!res.success) {
+      // Revert if server update failed
+      setCheckedIds((prev) => {
+        const reverted = new Set(prev);
+        if (checked) reverted.delete(itemId);
+        else reverted.add(itemId);
+        return reverted;
+      });
+      toast.error(res.error || "Failed to update checklist item");
+    }
   };
 
   return (
@@ -282,7 +302,12 @@ export function WritingStudioClient({
             </TabsTrigger>
           </TabsList>
 
-          <span className="text-xs text-muted-foreground font-mono">{saveStatus}</span>
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono">
+            {saveStatus.includes("Saving") && (
+              <Loader2 className="size-3 animate-spin text-primary shrink-0" />
+            )}
+            <span>{saveStatus}</span>
+          </div>
         </div>
 
         {/* Editor Tab */}
@@ -322,10 +347,18 @@ export function WritingStudioClient({
                   variant="outline"
                   size="sm"
                   onClick={handleManualSave}
-                  disabled={isPending}
-                  className="h-8 text-xs"
+                  disabled={isPending || isSavingDraft}
+                  className="h-8 text-xs rounded-xl"
                 >
-                  <Save className="size-3.5 mr-1.5" /> Save Draft
+                  {isSavingDraft ? (
+                    <>
+                      <Loader2 className="size-3.5 mr-1.5 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="size-3.5 mr-1.5" /> Save Draft
+                    </>
+                  )}
                 </Button>
                 <Button
                   size="sm"
@@ -445,9 +478,16 @@ export function WritingStudioClient({
               size="sm"
               onClick={handleConfirmSubmit}
               disabled={isPending}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl"
             >
-              {isPending ? "Submitting..." : "Confirm & Submit"}
+              {isPending ? (
+                <>
+                  <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Confirm & Submit"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

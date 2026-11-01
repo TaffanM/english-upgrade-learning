@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, CheckCircle2, Save, Sparkles, Volume2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, Save, Sparkles, Volume2 } from "lucide-react";
 import { Database } from "@/types/database.types";
 
 type Phase = Database["public"]["Tables"]["phases"]["Row"];
@@ -63,17 +63,25 @@ export function WeeklyReviewClient({
   // Audio signed URLs for comparison
   const [day1AudioUrl, setDay1AudioUrl] = useState<string | null>(null);
   const [day41AudioUrl, setDay41AudioUrl] = useState<string | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState<"day1" | "day41" | null>(null);
 
   const loadAudio = async (which: "day1" | "day41") => {
     const path = which === "day1" ? day1AudioPath : day41AudioPath;
     if (!path) return;
 
-    const res = await getSignedAudioUrlAction(path);
-    if (res.signedUrl) {
-      if (which === "day1") setDay1AudioUrl(res.signedUrl);
-      else setDay41AudioUrl(res.signedUrl);
-    } else {
-      toast.error(res.error || "Failed to load audio");
+    setLoadingAudio(which);
+    try {
+      const res = await getSignedAudioUrlAction(path);
+      if (res.signedUrl) {
+        if (which === "day1") setDay1AudioUrl(res.signedUrl);
+        else setDay41AudioUrl(res.signedUrl);
+      } else {
+        toast.error(res.error || "Failed to load audio");
+      }
+    } catch {
+      toast.error("Failed to load audio");
+    } finally {
+      setLoadingAudio(null);
     }
   };
 
@@ -204,8 +212,21 @@ export function WeeklyReviewClient({
                   {day1AudioUrl ? (
                     <audio src={day1AudioUrl} controls className="w-full h-9" />
                   ) : day1AudioPath ? (
-                    <Button variant="outline" size="sm" onClick={() => loadAudio("day1")}>
-                      <Volume2 className="size-3.5 mr-1.5" /> Listen to Day 1
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={loadingAudio !== null}
+                      onClick={() => loadAudio("day1")}
+                    >
+                      {loadingAudio === "day1" ? (
+                        <>
+                          <Loader2 className="size-3.5 mr-1.5 animate-spin" /> Loading audio...
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="size-3.5 mr-1.5" /> Listen to Day 1
+                        </>
+                      )}
                     </Button>
                   ) : (
                     <p className="text-xs text-muted-foreground">No Day 1 audio recorded.</p>
@@ -217,8 +238,21 @@ export function WeeklyReviewClient({
                   {day41AudioUrl ? (
                     <audio src={day41AudioUrl} controls className="w-full h-9" />
                   ) : day41AudioPath ? (
-                    <Button variant="outline" size="sm" onClick={() => loadAudio("day41")}>
-                      <Volume2 className="size-3.5 mr-1.5" /> Listen to Day 41
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={loadingAudio !== null}
+                      onClick={() => loadAudio("day41")}
+                    >
+                      {loadingAudio === "day41" ? (
+                        <>
+                          <Loader2 className="size-3.5 mr-1.5 animate-spin" /> Loading audio...
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="size-3.5 mr-1.5" /> Listen to Day 41
+                        </>
+                      )}
                     </Button>
                   ) : (
                     <p className="text-xs text-muted-foreground">No Day 41 audio recorded yet.</p>
@@ -276,9 +310,18 @@ export function WeeklyReviewClient({
         </CardContent>
 
         <CardFooter className="flex justify-end border-t pt-4">
-          <Button onClick={handleSubmit} disabled={isPending} className="bg-primary text-primary-foreground">
-            <Save className="size-3.5 mr-1.5" />
-            {isPending ? "Saving..." : "Save Weekly Review"}
+          <Button onClick={handleSubmit} disabled={isPending} className="bg-primary text-primary-foreground rounded-xl">
+            {isPending ? (
+              <>
+                <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                Saving Weekly Review...
+              </>
+            ) : (
+              <>
+                <Save className="size-3.5 mr-1.5" />
+                Save Weekly Review
+              </>
+            )}
           </Button>
         </CardFooter>
       </Card>

@@ -2,13 +2,18 @@ import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { updateProfileAction } from "@/app/actions/profile";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Save, User } from "lucide-react";
+import { CheckCircle2, User } from "lucide-react";
+import { SettingsSubmitButton } from "./SettingsSubmitButton";
 
-async function SettingsFormContent() {
+async function SettingsFormContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ updated?: string }>;
+}) {
+  const { updated } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -25,7 +30,7 @@ async function SettingsFormContent() {
     .maybeSingle();
 
   return (
-    <Card>
+    <Card className="rounded-3xl border-2 border-border/80 shadow-xs">
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <User className="size-4 text-primary" /> Profile Details
@@ -37,6 +42,13 @@ async function SettingsFormContent() {
 
       <form action={updateProfileAction}>
         <CardContent className="space-y-4">
+          {updated === "true" && (
+            <div className="p-3 text-xs bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border border-emerald-500/20 rounded-xl flex items-center gap-2 animate-scale-in">
+              <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
+              <span>Profile settings updated successfully!</span>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Label htmlFor="email" className="text-xs">Email</Label>
             <Input
@@ -44,7 +56,7 @@ async function SettingsFormContent() {
               type="email"
               value={user.email ?? ""}
               disabled
-              className="bg-muted/50 text-muted-foreground text-xs"
+              className="bg-muted/50 text-muted-foreground text-xs rounded-xl"
             />
             <span className="text-[10px] text-muted-foreground">
               Email is provisioned by the project administrator.
@@ -58,7 +70,7 @@ async function SettingsFormContent() {
               name="displayName"
               defaultValue={profile?.display_name ?? ""}
               placeholder="Learner name"
-              className="text-xs"
+              className="text-xs rounded-xl"
             />
           </div>
 
@@ -68,22 +80,24 @@ async function SettingsFormContent() {
               id="timezone"
               name="timezone"
               defaultValue={profile?.timezone ?? "Asia/Jakarta"}
-              className="text-xs font-mono"
+              className="text-xs font-mono rounded-xl"
             />
           </div>
         </CardContent>
 
         <CardFooter className="flex justify-end border-t pt-4">
-          <Button type="submit" size="sm">
-            <Save className="size-3.5 mr-1.5" /> Save Changes
-          </Button>
+          <SettingsSubmitButton />
         </CardFooter>
       </form>
     </Card>
   );
 }
 
-export default function SettingsPage() {
+export default function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ updated?: string }>;
+}) {
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-up">
       <div className="space-y-1">
@@ -93,8 +107,8 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <Suspense fallback={<div className="h-72 rounded-2xl bg-card border animate-pulse" />}>
-        <SettingsFormContent />
+      <Suspense fallback={<div className="h-72 rounded-3xl bg-card border animate-pulse" />}>
+        <SettingsFormContent searchParams={searchParams} />
       </Suspense>
     </div>
   );

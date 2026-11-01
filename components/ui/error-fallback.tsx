@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ErrorFallbackProps {
   title?: string;
@@ -20,7 +22,10 @@ export function ErrorFallback({
   onRetry,
   showHomeLink = true,
 }: ErrorFallbackProps) {
+  const [isRetrying, setIsRetrying] = useState(false);
+
   const handleRetry = () => {
+    setIsRetrying(true);
     if (onRetry) {
       onRetry();
     } else {
@@ -163,11 +168,12 @@ export function ErrorFallback({
         <div className="flex flex-col sm:flex-row gap-2.5 w-full justify-center">
           <Button
             onClick={handleRetry}
+            disabled={isRetrying}
             size="lg"
             className="rounded-xl font-bold pressable flex items-center justify-center gap-2"
           >
-            <RefreshCw className="size-4" />
-            <span>Try Again</span>
+            <RefreshCw className={cn("size-4", isRetrying && "animate-spin")} />
+            <span>{isRetrying ? "Retrying..." : "Try Again"}</span>
           </Button>
 
           {showHomeLink && (

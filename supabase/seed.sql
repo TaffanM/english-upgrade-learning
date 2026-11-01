@@ -53,10 +53,10 @@ end $$;
 
 -- Populate 41 Days with activities and checklist items
 -- Helper function to seed days idempotently
-create or replace function pg_temp.seed_day(
+create or replace function public._seed_day(
   p_challenge_slug text,
-  p_phase_num smallint,
-  p_day_num smallint,
+  p_phase_num integer,
+  p_day_num integer,
   p_date date,
   p_title text,
   p_intro text,
@@ -112,7 +112,7 @@ end;
 $$;
 
 -- Phase 1: Build the habit & baseline (Days 1–7)
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 1, 1, '2026-10-31',
   'Day 1: Personal Baseline',
   'Welcome to Day 1! Introduce yourself and establish your starting baseline.',
@@ -124,7 +124,7 @@ select pg_temp.seed_day(
   'Use present simple, present perfect, and clear paragraph structure.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 1, 2, '2026-11-01',
   'Day 2: Daily Routines & Productivity',
   'Examine your daily habits and how you optimize your productive hours.',
@@ -136,7 +136,7 @@ select pg_temp.seed_day(
   'Incorporate temporal transitions and varied sentence lengths.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 1, 3, '2026-11-02',
   'Day 3: Memorable Journeys',
   'Recount a meaningful journey or commute that made an impression.',
@@ -148,7 +148,7 @@ select pg_temp.seed_day(
   'Check consistent narrative tenses (past simple vs past perfect).'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 1, 4, '2026-11-03',
   'Day 4: Hobbies & Passions',
   'Express your interests with genuine enthusiasm and descriptive vocabulary.',
@@ -160,7 +160,7 @@ select pg_temp.seed_day(
   'Verify topical vocabulary and clear sectional organization.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 1, 5, '2026-11-04',
   'Day 5: Describing Places',
   'Bring a physical environment to life through sensory details.',
@@ -172,7 +172,7 @@ select pg_temp.seed_day(
   'Ensure sensory description and evocative adjectives.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 1, 6, '2026-11-05',
   'Day 6: Food & Culture',
   'Explore the connection between culinary traditions and community.',
@@ -184,7 +184,7 @@ select pg_temp.seed_day(
   'Use precise culinary and cultural terminology.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 1, 7, '2026-11-06',
   'Day 7: Week 1 Habit Reflection',
   'Week 1 checkpoint! Review your consistency and reflect on your speaking rhythm.',
@@ -197,7 +197,7 @@ select pg_temp.seed_day(
 );
 
 -- Phase 2: Opinions & comparisons (Days 8–14)
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 2, 8, '2026-11-07',
   'Day 8: Remote Work vs In-Office',
   'Weigh the advantages and drawbacks of modern work arrangements.',
@@ -209,7 +209,7 @@ select pg_temp.seed_day(
   'Use comparison linkers: whereas, in comparison to, conversely.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 2, 9, '2026-11-08',
   'Day 9: Traditional Books vs Digital Reading',
   'Analyze how reading habits have shifted in the digital era.',
@@ -221,7 +221,7 @@ select pg_temp.seed_day(
   'Demonstrate concession structures and clear thesis positioning.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 2, 10, '2026-11-09',
   'Day 10: Online Shopping vs Retail Stores',
   'Evaluate customer experience across online and physical retail.',
@@ -233,7 +233,7 @@ select pg_temp.seed_day(
   'Employ hedging and nuanced generalizations.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 2, 11, '2026-11-10',
   'Day 11: Public Transit vs Personal Vehicles',
   'Discuss urban mobility, sustainability, and personal freedom.',
@@ -245,7 +245,7 @@ select pg_temp.seed_day(
   'Maintain formal, persuasive register and constructive proposals.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 2, 12, '2026-11-11',
   'Day 12: Big City vs Small Town Living',
   'Contemplate pace of life, community connections, and career opportunities.',
@@ -257,7 +257,7 @@ select pg_temp.seed_day(
   'Ensure balanced paragraphing and parallel grammatical clauses.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 2, 13, '2026-11-12',
   'Day 13: Education: Practical Skills vs Theory',
   'Debate the fundamental purpose of higher education institutions.',
@@ -269,7 +269,7 @@ select pg_temp.seed_day(
   'Support claims with concrete hypothetical or real-world examples.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 2, 14, '2026-11-13',
   'Day 14: Week 2 Opinion Synthesis & Review',
   'Week 2 checkpoint! Consolidate your comparative reasoning and stance-taking.',
@@ -282,7 +282,7 @@ select pg_temp.seed_day(
 );
 
 -- Phase 3: Develop and support ideas (Days 15–21)
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 3, 15, '2026-11-14',
   'Day 15: Environmental Initiatives',
   'Formulate proactive solutions for neighborhood environmental sustainability.',
@@ -294,7 +294,7 @@ select pg_temp.seed_day(
   'Use problem-solution organizational framework.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 3, 16, '2026-11-15',
   'Day 16: Technology and Human Connection',
   'Critique how algorithmic feeds and social apps influence genuine relationships.',
@@ -306,7 +306,7 @@ select pg_temp.seed_day(
   'Formulate and refute a counterargument with poise.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 3, 17, '2026-11-16',
   'Day 17: Health, Nutrition & Wellness',
   'Examine societal responsibility versus individual autonomy in public health.',
@@ -318,7 +318,7 @@ select pg_temp.seed_day(
   'Exemplify points with cause-and-effect connectors.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 3, 18, '2026-11-17',
   'Day 18: Lifelong Learning & Adaptability',
   'Reflect on career longevity in a rapidly evolving technological climate.',
@@ -330,7 +330,7 @@ select pg_temp.seed_day(
   'Utilize strong action verbs and quantified impact.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 3, 19, '2026-11-18',
   'Day 19: Arts & Creative Expression',
   'Defend the civic and individual value of cultural funding in society.',
@@ -342,7 +342,7 @@ select pg_temp.seed_day(
   'Demonstrate emphatic structures (e.g. Not only does art...).'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 3, 20, '2026-11-19',
   'Day 20: Tourism: Economic Gains vs Local Impact',
   'Deconstruct the complex trade-offs of mass global tourism on heritage sites.',
@@ -354,7 +354,7 @@ select pg_temp.seed_day(
   'Calibrate degrees of certainty and modal precision.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 3, 21, '2026-11-20',
   'Day 21: Week 3 Midpoint Synthesis',
   'Week 3 milestone! Take stock of your ability to build extended paragraphs.',
@@ -367,7 +367,7 @@ select pg_temp.seed_day(
 );
 
 -- Phase 4: Abstract topics & precision (Days 22–28)
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 4, 22, '2026-11-21',
   'Day 22: Artificial Intelligence & Ethics',
   'Engage with ethical frontiers in machine decision-making and creative generation.',
@@ -379,7 +379,7 @@ select pg_temp.seed_day(
   'Incorporate B2 academic vocabulary and tight thesis framing.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 4, 23, '2026-11-22',
   'Day 23: The Concept of Success',
   'Re-evaluate societal definitions of achievement versus personal fulfillment.',
@@ -391,7 +391,7 @@ select pg_temp.seed_day(
   'Balance conceptual abstract ideas with grounded illustrations.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 4, 24, '2026-11-23',
   'Day 24: Privacy in the Digital Age',
   'Scrutinize the unspoken trade-off between modern convenience and surveillance.',
@@ -403,7 +403,7 @@ select pg_temp.seed_day(
   'Demonstrate intentional use of active and passive voice.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 4, 25, '2026-11-24',
   'Day 25: Globalization vs Cultural Homogenization',
   'Investigate whether global interconnectedness enriches or erases local heritage.',
@@ -415,7 +415,7 @@ select pg_temp.seed_day(
   'Employ sophisticated concession and counterpoint adverbs.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 4, 26, '2026-11-25',
   'Day 26: Risk-Taking & Failure',
   'Reflect on constructive setbacks as an indispensable catalyst for growth.',
@@ -427,7 +427,7 @@ select pg_temp.seed_day(
   'Ensure precise tense shifting when framing past outcomes.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 4, 27, '2026-11-26',
   'Day 27: Media Literacy & Misinformation',
   'Evaluate critical thinking in navigating conflicting information streams.',
@@ -439,7 +439,7 @@ select pg_temp.seed_day(
   'Demonstrate modals of deduction and critical appraisal.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 4, 28, '2026-11-27',
   'Day 28: Week 4 Precision Review',
   'Week 4 checkpoint! Test your lexical precision and ability to discuss complex topics.',
@@ -452,7 +452,7 @@ select pg_temp.seed_day(
 );
 
 -- Phase 5: B2-style extended responses (Days 29–35)
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 5, 29, '2026-11-28',
   'Day 29: Sustainable Cities of Tomorrow',
   'Design an imaginative vision for carbon-neutral, human-centric urban design.',
@@ -464,7 +464,7 @@ select pg_temp.seed_day(
   'Utilize advanced future time clauses and projections.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 5, 30, '2026-11-29',
   'Day 30: Consumerism & Minimalist Living',
   'Contrast materialistic satisfaction with intentional, sustainable minimalism.',
@@ -476,7 +476,7 @@ select pg_temp.seed_day(
   'Integrate complex discourse linkers across paragraphs.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 5, 31, '2026-11-30',
   'Day 31: Space Exploration & Resource Allocation',
   'Debate funding priorities between cosmic exploration and urgent domestic issues.',
@@ -488,7 +488,7 @@ select pg_temp.seed_day(
   'Practice diplomatic balance and multi-faceted rebuttal.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 5, 32, '2026-12-01',
   'Day 32: The Future of Books, Media & Journalism',
   'Analyze the survival of investigative reporting amidst subscription fatigue.',
@@ -500,7 +500,7 @@ select pg_temp.seed_day(
   'Utilize nominalization to elevate writing register.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 5, 33, '2026-12-02',
   'Day 33: Leadership & Collective Responsibility',
   'Define the quintessential qualities of effective modern leadership.',
@@ -512,7 +512,7 @@ select pg_temp.seed_day(
   'Verify strong topic sentences and seamless paragraph hooks.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 5, 34, '2026-12-03',
   'Day 34: Global Languages & Linguistic Diversity',
   'Explore English as a global lingua franca alongside the safeguarding of endangered dialects.',
@@ -524,7 +524,7 @@ select pg_temp.seed_day(
   'Ensure consistent academic tone and objective stance.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 5, 35, '2026-12-04',
   'Day 35: Week 5 Extended Fluency Review',
   'Week 5 checkpoint! Assess your stamina in maintaining coherent, extended discourse.',
@@ -537,7 +537,7 @@ select pg_temp.seed_day(
 );
 
 -- Phase 6: Timed practice & refinement (Days 36–41)
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 6, 36, '2026-12-05',
   'Day 36: Timed Challenge: Social Change',
   'Enter timed conditions: synthesize prompt and speak within strict intervals.',
@@ -549,7 +549,7 @@ select pg_temp.seed_day(
   'Verify complete response generated strictly within the 15-minute window.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 6, 37, '2026-12-06',
   'Day 37: Timed Challenge: Work-Life Boundaries',
   'Practice rapid stance formulation on digital tethering and workplace burnout.',
@@ -561,7 +561,7 @@ select pg_temp.seed_day(
   'Check for well-defined topic sentence and two supporting paragraphs.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 6, 38, '2026-12-07',
   'Day 38: Error Eradication & Self-Correction',
   'Zero in on recurring personal grammar slips (articles, prepositions, agreement).',
@@ -573,7 +573,7 @@ select pg_temp.seed_day(
   'Conduct systematic proofreading for article and preposition accuracy.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 6, 39, '2026-12-08',
   'Day 39: Spontaneous Discourse & Nuance',
   'Handle unexpected prompts with quick lexical retrieval and structural composure.',
@@ -585,7 +585,7 @@ select pg_temp.seed_day(
   'Ensure seamless transitions between figurative and literal ideas.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 6, 40, '2026-12-09',
   'Day 40: The Penultimate Synthesis',
   'Final preparation run before the challenge conclusion. Full confidence and poise.',
@@ -597,7 +597,7 @@ select pg_temp.seed_day(
   'Demonstrate polished B2 syntax, cohesive devices, and ambitious vocabulary.'
 );
 
-select pg_temp.seed_day(
+select public._seed_day(
   '41-day-english-upgrade', 6, 41, '2026-12-10',
   'Day 41: Final Challenge & Grand Comparison',
   'Congratulations on reaching Day 41! Complete the final speaking and writing benchmarks and celebrate your journey.',
@@ -608,3 +608,6 @@ select pg_temp.seed_day(
   200,
   'Conduct the Day 1 vs Day 41 comparative reflection.'
 );
+
+-- Clean up temporary seed function
+drop function if exists public._seed_day;

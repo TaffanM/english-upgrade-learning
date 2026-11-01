@@ -15,13 +15,11 @@ on conflict (id) do update set
   file_size_limit = 52428800,
   allowed_mime_types = array['audio/webm', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/wav', 'audio/x-m4a'];
 
--- -- Enable RLS on storage.objects (Supabase enables this by default, but verify)
--- alter table storage.objects enable row level security;
-
 -- Storage policies:
 -- Objects are organized by {user_id}/{challenge_id}/{day_number}/{submission_id}.ext
 -- The first folder segment must match auth.uid()::text
 
+drop policy if exists "Users can read own speaking recordings" on storage.objects;
 create policy "Users can read own speaking recordings"
   on storage.objects for select
   to authenticated
@@ -30,6 +28,7 @@ create policy "Users can read own speaking recordings"
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+drop policy if exists "Users can upload own speaking recordings" on storage.objects;
 create policy "Users can upload own speaking recordings"
   on storage.objects for insert
   to authenticated
@@ -38,6 +37,7 @@ create policy "Users can upload own speaking recordings"
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+drop policy if exists "Users can update own speaking recordings" on storage.objects;
 create policy "Users can update own speaking recordings"
   on storage.objects for update
   to authenticated
@@ -50,6 +50,7 @@ create policy "Users can update own speaking recordings"
     and (storage.foldername(name))[1] = auth.uid()::text
   );
 
+drop policy if exists "Users can delete own speaking recordings" on storage.objects;
 create policy "Users can delete own speaking recordings"
   on storage.objects for delete
   to authenticated

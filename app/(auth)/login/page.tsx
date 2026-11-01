@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Lock, ShieldAlert } from "lucide-react";
+import { LoginSubmitButton } from "./LoginSubmitButton";
 
 async function LoginFormContent({
   searchParams,
@@ -59,9 +60,7 @@ async function LoginFormContent({
       </CardContent>
 
       <CardFooter className="flex flex-col gap-4 pt-2">
-        <Button type="submit" size="lg" className="w-full pressable rounded-xl font-bold">
-          Sign In to Challenge 🚀
-        </Button>
+        <LoginSubmitButton />
         <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground text-center">
           <Lock className="size-3" />
           <span>Single-learner private space • Public registration disabled</span>

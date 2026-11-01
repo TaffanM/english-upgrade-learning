@@ -30,6 +30,7 @@ import {
   Clock,
   History,
   Info,
+  Loader2,
   Mic,
   MicOff,
   Pause,
@@ -434,8 +435,17 @@ export function SpeakingStudioClient({
                       disabled={isPending}
                       className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl pressable shadow-xs font-semibold"
                     >
-                      <Send className="size-3.5 mr-1.5" />
-                      {isPending ? "Uploading..." : "Submit Recording 🚀"}
+                      {isPending ? (
+                        <>
+                          <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                          Uploading & Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="size-3.5 mr-1.5" />
+                          Submit Recording 🚀
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
@@ -505,10 +515,17 @@ export function SpeakingStudioClient({
                               loadHistoricalAudio(attempt.id, attempt.storage_path!)
                             }
                           >
-                            <Volume2 className="size-3.5 mr-1.5" />
-                            {loadingAudioId === attempt.id
-                              ? "Loading audio..."
-                              : "Play Recording"}
+                            {loadingAudioId === attempt.id ? (
+                              <>
+                                <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                                Loading audio...
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="size-3.5 mr-1.5" />
+                                Play Recording
+                              </>
+                            )}
                           </Button>
                         )}
                       </div>
@@ -569,7 +586,14 @@ export function SpeakingStudioClient({
               onClick={handleAlternativeSubmit}
               disabled={isPending || altNotes.trim().length < 10}
             >
-              {isPending ? "Submitting..." : "Submit Alternative Completion"}
+              {isPending ? (
+                <>
+                  <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Alternative Completion"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

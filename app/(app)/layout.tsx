@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { signOutAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SignOutButton } from "@/components/layout/SignOutButton";
 import {
   Calendar,
   CheckSquare,
@@ -45,16 +46,7 @@ async function HeaderUserActions() {
       </Link>
 
       <form action={signOutAction}>
-        <Button
-          variant="ghost"
-          size="sm"
-          type="submit"
-          className="text-xs text-muted-foreground hover:text-foreground rounded-xl"
-          title="Sign Out"
-        >
-          <LogOut className="size-3.5 mr-1" />
-          <span className="hidden sm:inline">Sign Out</span>
-        </Button>
+        <SignOutButton />
       </form>
     </div>
   );
