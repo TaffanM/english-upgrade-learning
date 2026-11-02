@@ -6,6 +6,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Lock, ShieldAlert } from "lucide-react";
+import { Footer } from "@/components/layout/Footer";
+import { Logo } from "@/components/ui/logo";
 import { LoginSubmitButton } from "./LoginSubmitButton";
 
 async function LoginFormContent({
@@ -86,35 +88,42 @@ export default function LoginPage({
   searchParams: Promise<{ redirectTo?: string; error?: string }>;
 }) {
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center px-4 py-12 bg-background">
-      <div className="w-full max-w-md space-y-6 animate-scale-in">
-        <div className="text-center space-y-2">
-          <Link
-            href="/"
-            className="inline-flex items-center text-xs font-semibold text-muted-foreground hover:text-foreground mb-2 pressable"
-          >
-            <ArrowLeft className="mr-1.5 size-3.5" /> Back to challenge overview
-          </Link>
+    <div className="min-h-screen flex flex-col justify-between bg-background">
+      <div className="flex-1 flex flex-col justify-center items-center px-4 py-12">
+        <div className="w-full max-w-md space-y-6 animate-scale-in">
+          <div className="text-center space-y-3">
+            <Link
+              href="/"
+              className="inline-flex items-center text-xs font-semibold text-muted-foreground hover:text-foreground mb-2 pressable"
+            >
+              <ArrowLeft className="mr-1.5 size-3.5" /> Back to challenge overview
+            </Link>
 
-          <h1 className="text-2xl font-extrabold tracking-tight">41-Day English Upgrade</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Sign in to continue your daily Speaking & Writing studio
-          </p>
+            <div className="flex justify-center py-2">
+              <Logo className="h-14 sm:h-16 w-auto text-foreground hover:text-primary transition-colors" />
+            </div>
+
+            <h1 className="text-2xl font-extrabold tracking-tight">Your English Learning Studio</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
+              Sign in to continue your daily Speaking & Writing studio
+            </p>
+          </div>
+
+          <Card className="shadow-sm border-2 border-border/80 rounded-3xl overflow-hidden card-hover-lift">
+            <CardHeader className="space-y-1 pb-3">
+              <CardTitle className="text-lg font-bold">Learner Sign In</CardTitle>
+              <CardDescription className="text-xs">
+                Enter your provisioned email and password to access your dashboard.
+              </CardDescription>
+            </CardHeader>
+
+            <Suspense fallback={<LoginFormFallback />}>
+              <LoginFormContent searchParams={searchParams} />
+            </Suspense>
+          </Card>
         </div>
-
-        <Card className="shadow-sm border-2 border-border/80 rounded-3xl overflow-hidden card-hover-lift">
-          <CardHeader className="space-y-1 pb-3">
-            <CardTitle className="text-lg font-bold">Learner Sign In</CardTitle>
-            <CardDescription className="text-xs">
-              Enter your provisioned email and password to access your dashboard.
-            </CardDescription>
-          </CardHeader>
-
-          <Suspense fallback={<LoginFormFallback />}>
-            <LoginFormContent searchParams={searchParams} />
-          </Suspense>
-        </Card>
       </div>
+      <Footer />
     </div>
   );
 }

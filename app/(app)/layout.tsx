@@ -7,6 +7,8 @@ import { signOutAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SignOutButton } from "@/components/layout/SignOutButton";
+import { Footer } from "@/components/layout/Footer";
+import { Logo } from "@/components/ui/logo";
 import {
   Calendar,
   CheckSquare,
@@ -83,14 +85,12 @@ export default function AppLayout({
       <header className="border-b border-border/80 bg-background/95 backdrop-blur-md sticky top-0 z-30 shadow-2xs">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <Link href="/dashboard" className="flex items-center gap-2.5 group">
-              <div className="size-9 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-2xs group-hover:rotate-6 transition-transform">
-                ✨
-              </div>
+            <Link href="/dashboard" className="flex items-center gap-2.5 group pressable">
+              <Logo className="h-8 md:h-9 w-auto text-foreground group-hover:text-primary transition-colors" />
               <div className="flex flex-col">
-                <span className="font-bold text-sm leading-tight tracking-tight flex items-center gap-1">
+                <span className="font-bold text-xs md:text-sm leading-tight tracking-tight flex items-center gap-1">
                   41 Upgrade
-                  <Badge variant="cute" className="text-[9px] py-0 px-1.5 h-4 ml-1">
+                  <Badge variant="cute" className="text-[9px] py-0 px-1.5 h-4 ml-0.5">
                     B1 → B2
                   </Badge>
                 </span>
@@ -131,11 +131,14 @@ export default function AppLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6 md:py-8 pb-28 md:pb-12">
+      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6 md:py-8 pb-12">
         <Suspense fallback={<AppPageFallback />}>
           {children}
         </Suspense>
       </main>
+
+      {/* Persistent Global Footer */}
+      <Footer className="pb-24 md:pb-8" />
 
       {/* Mobile Floating Bottom Dock (Hidden on desktop) */}
       <div className="md:hidden fixed bottom-3 left-4 right-4 z-40">

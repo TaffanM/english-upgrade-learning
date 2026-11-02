@@ -13,6 +13,11 @@ export const metadata: Metadata = {
   title: "41-Day English Upgrade | B1 → B2 Challenge",
   description:
     "Intensive single-learner productive skills challenge: 15 minutes Speaking + 15 minutes Writing daily.",
+  icons: {
+    icon: "/logo.svg",
+    shortcut: "/logo.svg",
+    apple: "/logo.svg",
+  },
 };
 
 export default function RootLayout({
