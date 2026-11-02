@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Target,
 } from "lucide-react";
+import { DailySelfAssessmentCard } from "@/features/progress/DailySelfAssessmentCard";
 import { Database } from "@/types/database.types";
 
 type ChallengeDay = Database["public"]["Tables"]["challenge_days"]["Row"] & {
@@ -26,6 +27,7 @@ type Activity = Database["public"]["Tables"]["activities"]["Row"];
 type ChecklistItem = Database["public"]["Tables"]["checklist_items"]["Row"];
 type Submission = Database["public"]["Tables"]["activity_submissions"]["Row"];
 type DailyProgress = Database["public"]["Tables"]["daily_progress"]["Row"];
+type SelfAssessment = Database["public"]["Tables"]["self_assessments"]["Row"];
 
 async function DayDetailContent({
   params,
@@ -66,11 +68,12 @@ async function DayDetailContent({
   }
   const day = dayData as ChallengeDay;
 
-  // Fetch activities, checklist items, and progress
+  // Fetch activities, checklist items, progress, and self-assessments
   const [
     { data: activitiesData, error: activitiesError },
     { data: checklistData, error: checklistError },
     { data: progressData },
+    { data: selfAssessmentsData },
   ] = await Promise.all([
     supabase
       .from("activities")
@@ -88,6 +91,12 @@ async function DayDetailContent({
       .eq("user_id", user.id)
       .eq("challenge_day_id", day.id)
       .maybeSingle(),
+    supabase
+      .from("self_assessments")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("challenge_day_id", day.id)
+      .order("updated_at", { ascending: false }),
   ]);
 
   if (activitiesError || !activitiesData || activitiesData.length === 0) {
@@ -103,6 +112,7 @@ async function DayDetailContent({
   const activities: Activity[] = activitiesData;
   const checklistItems: ChecklistItem[] = checklistData ?? [];
   const progress: DailyProgress | null = progressData ?? null;
+  const selfAssessments: SelfAssessment[] = selfAssessmentsData ?? [];
 
   // Fetch submissions for these activities
   const activityIds = activities.map((a) => a.id);
@@ -329,6 +339,13 @@ async function DayDetailContent({
           </CardContent>
         </Card>
       )}
+
+      {/* Daily Self-Assessment Rubric (Speaking & Writing) */}
+      <DailySelfAssessmentCard
+        challengeDayId={day.id}
+        dayNumber={day.day_number}
+        initialAssessments={selfAssessments}
+      />
     </div>
   );
 }
