@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { HeaderAuthButton } from "@/components/layout/HeaderAuthButton";
 import { Footer } from "@/components/layout/Footer";
 import { Logo } from "@/components/ui/logo";
+import { TextLoop } from "@/components/ui/TextLoop";
 import {
   ArrowRight,
   CheckCircle2,
@@ -195,6 +196,24 @@ export default function HomePage() {
               </div>
             </Card>
           </div>
+        </section>
+
+        {/* Full Edge-to-Edge Curved Ribbon Banner */}
+        <section className="w-full overflow-hidden py-2 my-1">
+          <TextLoop
+            fullBleed
+            text="Speak Naturally ✦ Write Fearlessly ✦ 41-Day English Upgrade ✦ B1 to B2 Mastery"
+            shape="wave"
+            speed={50}
+            curviness={24}
+            fontSize={32}
+            fontWeight={800}
+            ribbon={true}
+            ribbonColor="#d97706"
+            ribbonWidth={60}
+            pauseOnHover={false}
+            edgeFade={0}
+          />
         </section>
 
         {/* 30-Min Daily Routine Breakdown */}
