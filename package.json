@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/unit-tests.test.mjs",
+    "test": "node --test tests/unit-tests.test.mjs tests/stt-unit-and-integration.test.mjs tests/ai-review-unit.test.mjs tests/ai-review-integration.test.mjs",
     "db:push": "node scripts/push-db.mjs"
   },
   "dependencies": {
@@ -25,6 +25,7 @@
     "lucide-react": "^1.66.0",
     "next": "16.4.3",
     "next-themes": "^0.4.6",
+    "openai": "^6.49.0",
     "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",

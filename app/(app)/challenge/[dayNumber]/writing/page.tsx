@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { mapRowToAiReviewDTO } from "@/lib/ai/review-service";
+import { AiReviewRecordDTO } from "@/lib/ai/types";
 import { ErrorFallback } from "@/components/ui/error-fallback";
 import { WritingStudioClient } from "@/features/writing/WritingStudioClient";
 
@@ -88,6 +90,20 @@ async function WritingStudioContent({
   const submittedAttempts = submissions?.filter((s) => s.status === "submitted") ?? [];
   const completedChecklistIds = completions?.map((c) => c.checklist_item_id) ?? [];
 
+  const submittedIds = submittedAttempts.map((s) => s.id);
+  const initialReviewsBySubmissionId: Record<string, AiReviewRecordDTO> = {};
+  if (submittedIds.length > 0) {
+    const { data: reviewRows } = await supabase
+      .from("ai_reviews")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("submission_id", submittedIds);
+
+    for (const row of reviewRows ?? []) {
+      initialReviewsBySubmissionId[row.submission_id] = mapRowToAiReviewDTO(row);
+    }
+  }
+
   return (
     <WritingStudioClient
       dayNumber={dayNum}
@@ -96,6 +112,7 @@ async function WritingStudioContent({
       activeDraft={activeDraft}
       submittedAttempts={submittedAttempts}
       completedChecklistIds={completedChecklistIds}
+      initialReviewsBySubmissionId={initialReviewsBySubmissionId}
     />
   );
 }

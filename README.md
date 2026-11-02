@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 41-Day English Upgrade (B1 → B2 Productive Skills Studio)
 
-## Getting Started
+A single-learner English learning web application built with **Next.js 16 (App Router)**, **TypeScript**, **Tailwind CSS**, **shadcn/ui**, **Supabase** (PostgreSQL, Auth, Private Storage), and **NVIDIA NIM** (AI Writing & Speaking Review + Speech-to-Text).
 
-First, run the development server:
+---
+
+## Features
+
+- **41-Day Structured Curriculum:** 6 progressive weekly phases from B1 habit building to B2 extended discourse.
+- **Daily Writing Studio:** 15-minute session timer, live word count calibration, draft autosaving, proofreading checklists, and attempt history.
+- **Daily Speaking Studio:** Browser audio recording normalized to 16 kHz 16-bit mono WAV, encrypted private Supabase Storage (`speaking-recordings`), and historical playback.
+- **Speech-to-Text (STT) Workflow:**
+  - Server-side transcription powered by **NVIDIA Parakeet CTC 1.1B ASR** (`nvidia/parakeet-ctc-1_1b-asr` via NVCF) with configurable fallback support for **Groq Whisper Large V3 Turbo** (`whisper-large-v3-turbo`).
+  - Editable transcript workflow that preserves both the raw ASR output (`original_transcript`) and learner-corrected text (`edited_transcript`).
+- **AI Writing & Speaking Tutor (NVIDIA NIM):**
+  - Curriculum-aware B1→B2 evaluations powered by NVIDIA NIM (`google/diffusiongemma-26b-a4b-it` with automatic fallback to `nvidia/nemotron-3.5-bolt-e4b`).
+  - Provides 4-dimension scores (`0–100`), strengths, areas for improvement, clause-level corrections with explanations, and follow-up exercises.
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` for local development. **Never commit `.env.local` or real API keys.**
+
+| Variable | Scope | Description |
+| :--- | :--- | :--- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Public | Your Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Supabase anonymous/publishable key |
+| `DATABASE_URL` | Server / CLI | Supabase PostgreSQL connection pooler URI (used by `npm run db:push`) |
+| `NVIDIA_API_KEY` | **Server-Only** | NVIDIA API Catalog / NIM secret key (`nvapi-...`) |
+| `NVIDIA_MODEL` | **Server-Only** | NVIDIA NIM chat model ID (default: `google/diffusiongemma-26b-a4b-it`) |
+| `STT_PROVIDER` | **Server-Only** | `nvidia` (default, Parakeet CTC 1.1B) or `groq` (Whisper Large V3 Turbo fallback) |
+| `NVIDIA_ASR_ENDPOINT` | **Server-Only** | NVCF HTTP invocation URL for `nvidia/parakeet-ctc-1_1b-asr` |
+| `NVIDIA_ASR_MODEL` | **Server-Only** | `nvidia/parakeet-ctc-1_1b-asr` |
+| `GROQ_API_KEY` | **Server-Only** | Optional — required only if `STT_PROVIDER=groq` |
+| `GROQ_STT_MODEL` | **Server-Only** | Optional — defaults to `whisper-large-v3-turbo` |
+
+---
+
+## Database Migrations & Row Level Security (RLS)
+
+All SQL migrations reside in `supabase/migrations/`:
+
+1. `0001_create_profiles.sql` — Learner profile linked to `auth.users`.
+2. `0002_create_curriculum_tables.sql` — `challenges`, `phases`, `challenge_days`, `activities`, `checklist_items`.
+3. `0003_create_learner_progress_tables.sql` — `activity_submissions`, `daily_progress`, `checklist_completions`, `self_assessments`, `weekly_reviews`.
+4. `0004_enable_rls_and_policies.sql` — Row Level Security policies enforcing `user_id = (select auth.uid())`.
+5. `0005_create_storage_policies.sql` — Private `speaking-recordings` bucket and folder-ownership RLS policies.
+6. `0006_add_stt_and_ai_reviews.sql` — Extends `activity_submissions` with STT columns (`original_transcript`, `edited_transcript`, `transcription_status`, `transcription_provider`, `transcription_model`, `transcribed_at`, `transcript_word_timestamps`, `transcription_error`) and creates `public.ai_reviews` with `UNIQUE (submission_id)` and strict RLS policies (`select`, `insert`, `update`, `delete` restricted to `user_id = (select auth.uid())`).
+
+To apply all migrations and seed the 41-day curriculum:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run db:push
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Local Development & Testing
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Install dependencies
+npm install
 
-## Learn More
+# Run TypeScript check
+npm run typecheck
 
-To learn more about Next.js, take a look at the following resources:
+# Run automated unit & integration tests (mocked providers, no real API key required)
+npm run test
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Start local development server
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Vercel Deployment & Verification Steps
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. **Configure Vercel Environment Variables:**
+   In your Vercel Project Settings → **Environment Variables**, add:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NVIDIA_API_KEY` (Server-only; ensure it is not exposed via `NEXT_PUBLIC_`)
+   - `NVIDIA_MODEL` (`google/diffusiongemma-26b-a4b-it`)
+   - `STT_PROVIDER` (`nvidia`)
+2. **Apply Database Migration:**
+   Ensure `0006_add_stt_and_ai_reviews.sql` has been applied to the production Supabase database via `npm run db:push`.
+3. **Post-Deployment Verification Checklist:**
+   - Sign in as the provisioned learner and open `/challenge/1/writing`.
+   - Submit a writing response and click **Request AI Tutor Feedback ✨**; verify scores, corrections, and persistence on page reload.
+   - Open `/challenge/1/speaking`, record and submit an audio response, click **Transcribe Recording**, edit a word in the transcript, click **Save Transcript**, and then click **Request AI Tutor Feedback ✨**.

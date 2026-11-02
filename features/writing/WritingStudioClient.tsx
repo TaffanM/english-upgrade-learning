@@ -36,6 +36,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Database } from "@/types/database.types";
+import { AiReviewRecordDTO } from "@/lib/ai/types";
+import { AiReviewPanel } from "@/features/ai-review/AiReviewPanel";
 
 type Activity = Database["public"]["Tables"]["activities"]["Row"];
 type ChecklistItem = Database["public"]["Tables"]["checklist_items"]["Row"];
@@ -48,6 +50,7 @@ interface Props {
   activeDraft: Submission | null;
   submittedAttempts: Submission[];
   completedChecklistIds: string[];
+  initialReviewsBySubmissionId?: Record<string, AiReviewRecordDTO>;
 }
 
 export function WritingStudioClient({
@@ -57,9 +60,18 @@ export function WritingStudioClient({
   activeDraft,
   submittedAttempts,
   completedChecklistIds,
+  initialReviewsBySubmissionId = {},
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  // AI reviews map by submission ID
+  const [reviewsBySubId, setReviewsBySubId] = useState<
+    Record<string, AiReviewRecordDTO>
+  >(initialReviewsBySubmissionId);
+  const [latestSubmitted, setLatestSubmitted] = useState<Submission | null>(
+    submittedAttempts[0] ?? null
+  );
 
   // Content state
   const [content, setContent] = useState<string>(
@@ -184,10 +196,13 @@ export function WritingStudioClient({
       setShowConfirmModal(false);
 
       if (res.success) {
+        if (res.submission) {
+          setLatestSubmitted(res.submission);
+        }
         toast.success(
           res.isDayComplete
             ? "Writing submitted! Day " + dayNumber + " is fully complete! 🎉"
-            : "Writing submitted successfully! Complete Speaking to finish the day."
+            : "Writing submitted successfully! You can now request AI Tutor feedback below."
         );
         router.refresh();
       } else {
@@ -400,6 +415,29 @@ export function WritingStudioClient({
               </CardContent>
             </Card>
           )}
+
+          {/* AI Tutor Feedback for Latest Submitted Attempt */}
+          {latestSubmitted && (
+            <div className="pt-2 space-y-2">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-semibold text-muted-foreground">
+                  Evaluating Submitted Attempt #{latestSubmitted.attempt_number}
+                </span>
+              </div>
+              <AiReviewPanel
+                key={latestSubmitted.id}
+                submissionId={latestSubmitted.id}
+                reviewType="writing"
+                initialReview={reviewsBySubId[latestSubmitted.id] ?? null}
+                onReviewGenerated={(rev) =>
+                  setReviewsBySubId((prev) => ({
+                    ...prev,
+                    [latestSubmitted.id]: rev,
+                  }))
+                }
+              />
+            </div>
+          )}
         </TabsContent>
 
         {/* History Tab */}
@@ -409,30 +447,44 @@ export function WritingStudioClient({
               No submitted attempts yet. Complete your first draft and click &quot;Submit Writing Attempt&quot;.
             </Card>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {submittedAttempts.map((attempt) => (
-                <Card key={attempt.id} className="border shadow-2xs">
-                  <CardHeader className="py-3 px-4 bg-muted/30 border-b">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono">
-                          Attempt #{attempt.attempt_number}
-                        </Badge>
-                        <span className="text-muted-foreground">
-                          {attempt.submitted_at
-                            ? new Date(attempt.submitted_at).toLocaleString()
-                            : ""}
+                <div key={attempt.id} className="space-y-3">
+                  <Card className="border shadow-2xs">
+                    <CardHeader className="py-3 px-4 bg-muted/30 border-b">
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="font-mono">
+                            Attempt #{attempt.attempt_number}
+                          </Badge>
+                          <span className="text-muted-foreground">
+                            {attempt.submitted_at
+                              ? new Date(attempt.submitted_at).toLocaleString()
+                              : ""}
+                          </span>
+                        </div>
+                        <span className="font-mono font-medium">
+                          {attempt.word_count ?? 0} words
                         </span>
                       </div>
-                      <span className="font-mono font-medium">
-                        {attempt.word_count ?? 0} words
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4 text-sm leading-relaxed whitespace-pre-wrap font-sans">
-                    {attempt.text_content}
-                  </CardContent>
-                </Card>
+                    </CardHeader>
+                    <CardContent className="p-4 text-sm leading-relaxed whitespace-pre-wrap font-sans">
+                      {attempt.text_content}
+                    </CardContent>
+                  </Card>
+
+                  <AiReviewPanel
+                    submissionId={attempt.id}
+                    reviewType="writing"
+                    initialReview={reviewsBySubId[attempt.id] ?? null}
+                    onReviewGenerated={(rev) =>
+                      setReviewsBySubId((prev) => ({
+                        ...prev,
+                        [attempt.id]: rev,
+                      }))
+                    }
+                  />
+                </div>
               ))}
             </div>
           )}

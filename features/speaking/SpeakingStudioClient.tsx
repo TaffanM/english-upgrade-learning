@@ -41,9 +41,39 @@ import {
   Volume2,
 } from "lucide-react";
 import { Database } from "@/types/database.types";
+import {
+  convertAudioBlobToMono16kWav,
+  encodePcmChunksToMono16kWavBlob,
+} from "@/lib/utils/audio-wav";
+import { countWords } from "@/lib/utils/word-count";
+import { TranscriptionRecordDTO, TranscriptionStatus } from "@/lib/stt/types";
+import { AiReviewRecordDTO } from "@/lib/ai/types";
+import { SpeakingTranscriptPanel } from "@/features/speaking/SpeakingTranscriptPanel";
+import { AiReviewPanel } from "@/features/ai-review/AiReviewPanel";
 
 type Activity = Database["public"]["Tables"]["activities"]["Row"];
 type Submission = Database["public"]["Tables"]["activity_submissions"]["Row"];
+
+function buildTranscriptionDTOFromSubmission(
+  sub: Submission
+): TranscriptionRecordDTO {
+  const edited = sub.edited_transcript?.trim() || null;
+  const original = sub.original_transcript?.trim() || null;
+  const activeTranscript = edited ?? original ?? null;
+  return {
+    submissionId: sub.id,
+    status: (sub.transcription_status || "none") as TranscriptionStatus,
+    originalTranscript: original,
+    editedTranscript: edited,
+    activeTranscript,
+    wordCount: activeTranscript ? countWords(activeTranscript) : 0,
+    provider: sub.transcription_provider,
+    model: sub.transcription_model,
+    transcribedAt: sub.transcribed_at,
+    wordTimestamps: null,
+    error: sub.transcription_error,
+  };
+}
 
 interface Props {
   dayNumber: number;
@@ -51,6 +81,7 @@ interface Props {
   userId: string;
   activity: Activity;
   submittedAttempts: Submission[];
+  initialReviewsBySubmissionId?: Record<string, AiReviewRecordDTO>;
 }
 
 export function SpeakingStudioClient({
@@ -59,9 +90,27 @@ export function SpeakingStudioClient({
   userId,
   activity,
   submittedAttempts,
+  initialReviewsBySubmissionId = {},
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  // Track transcriptions and AI reviews by submission ID
+  const [transcriptionsBySubId, setTranscriptionsBySubId] = useState<
+    Record<string, TranscriptionRecordDTO>
+  >(() => {
+    const map: Record<string, TranscriptionRecordDTO> = {};
+    for (const s of submittedAttempts) {
+      map[s.id] = buildTranscriptionDTOFromSubmission(s);
+    }
+    return map;
+  });
+  const [reviewsBySubId, setReviewsBySubId] = useState<
+    Record<string, AiReviewRecordDTO>
+  >(initialReviewsBySubmissionId);
+  const [latestSubmitted, setLatestSubmitted] = useState<Submission | null>(
+    submittedAttempts[0] ?? null
+  );
 
   // Recorder states: 'idle' | 'recording' | 'paused' | 'reviewing'
   const [recorderState, setRecorderState] = useState<
@@ -72,11 +121,16 @@ export function SpeakingStudioClient({
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [audioDuration, setAudioDuration] = useState<number>(0);
 
-  // MediaRecorder refs
+  // MediaRecorder & live Web Audio PCM capture refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const scriptProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const pcmChunksRef = useRef<Float32Array[]>([]);
+  const pcmSampleRateRef = useRef<number>(48000);
+  const isCapturingPcmRef = useRef<boolean>(false);
 
   // Alternative completion modal
   const [showAltModal, setShowAltModal] = useState<boolean>(false);
@@ -114,14 +168,51 @@ export function SpeakingStudioClient({
   const startRecording = async () => {
     try {
       audioChunksRef.current = [];
+      pcmChunksRef.current = [];
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : "audio/mp4";
+      // Attach live Web Audio PCM capture so Firefox/Safari/Chrome always produce
+      // a canonical 16kHz 16-bit mono RIFF/WAVE file without relying on container decoding.
+      try {
+        const AudioCtx =
+          window.AudioContext ||
+          (window as unknown as { webkitAudioContext?: typeof AudioContext })
+            .webkitAudioContext;
+        if (AudioCtx) {
+          const audioCtx = new AudioCtx();
+          audioContextRef.current = audioCtx;
+          pcmSampleRateRef.current = audioCtx.sampleRate || 48000;
+          const sourceNode = audioCtx.createMediaStreamSource(stream);
+          const processorNode = audioCtx.createScriptProcessor(4096, 1, 1);
+          scriptProcessorRef.current = processorNode;
+          isCapturingPcmRef.current = true;
 
-      const recorder = new MediaRecorder(stream, { mimeType });
+          processorNode.onaudioprocess = (e) => {
+            if (!isCapturingPcmRef.current) return;
+            const channelData = e.inputBuffer.getChannelData(0);
+            pcmChunksRef.current.push(new Float32Array(channelData));
+          };
+
+          sourceNode.connect(processorNode);
+          processorNode.connect(audioCtx.destination);
+        }
+      } catch {
+        // Fallback to MediaRecorder container if Web Audio capture is unavailable
+      }
+
+      const candidateMimes = [
+        "audio/webm;codecs=opus",
+        "audio/webm",
+        "audio/ogg;codecs=opus",
+        "audio/mp4",
+      ];
+      const supportedMime =
+        candidateMimes.find((m) => MediaRecorder.isTypeSupported(m)) || "";
+
+      const recorder = supportedMime
+        ? new MediaRecorder(stream, { mimeType: supportedMime })
+        : new MediaRecorder(stream);
       mediaRecorderRef.current = recorder;
 
       recorder.ondataavailable = (event) => {
@@ -131,9 +222,32 @@ export function SpeakingStudioClient({
       };
 
       recorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: mimeType });
-        setAudioBlob(blob);
-        const url = URL.createObjectURL(blob);
+        isCapturingPcmRef.current = false;
+        if (scriptProcessorRef.current) {
+          try {
+            scriptProcessorRef.current.disconnect();
+          } catch {
+            // ignore
+          }
+          scriptProcessorRef.current = null;
+        }
+        if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+          audioContextRef.current.close().catch(() => {});
+          audioContextRef.current = null;
+        }
+
+        const finalBlob =
+          pcmChunksRef.current.length > 0
+            ? encodePcmChunksToMono16kWavBlob(
+                pcmChunksRef.current,
+                pcmSampleRateRef.current
+              )
+            : new Blob(audioChunksRef.current, {
+                type: supportedMime || "audio/webm",
+              });
+
+        setAudioBlob(finalBlob);
+        const url = URL.createObjectURL(finalBlob);
         setAudioUrl(url);
         setAudioDuration(recordingSeconds);
         setRecorderState("reviewing");
@@ -155,6 +269,7 @@ export function SpeakingStudioClient({
 
   const pauseRecording = () => {
     if (mediaRecorderRef.current && recorderState === "recording") {
+      isCapturingPcmRef.current = false;
       mediaRecorderRef.current.pause();
       setRecorderState("paused");
     }
@@ -162,6 +277,7 @@ export function SpeakingStudioClient({
 
   const resumeRecording = () => {
     if (mediaRecorderRef.current && recorderState === "paused") {
+      isCapturingPcmRef.current = true;
       mediaRecorderRef.current.resume();
       setRecorderState("recording");
     }
@@ -172,12 +288,14 @@ export function SpeakingStudioClient({
       mediaRecorderRef.current &&
       (recorderState === "recording" || recorderState === "paused")
     ) {
+      isCapturingPcmRef.current = false;
       mediaRecorderRef.current.stop();
     }
   };
 
   const discardRecording = () => {
     if (audioUrl) URL.revokeObjectURL(audioUrl);
+    pcmChunksRef.current = [];
     setAudioBlob(null);
     setAudioUrl(null);
     setRecordingSeconds(0);
@@ -196,18 +314,27 @@ export function SpeakingStudioClient({
 
     startTransition(async () => {
       try {
-        toast.info("Uploading audio recording...");
+        toast.info("Preparing & uploading audio recording...");
+
+        const normalizedBlob = await convertAudioBlobToMono16kWav(audioBlob);
+        const cleanMime = (normalizedBlob.type || "audio/wav")
+          .split(";")[0]
+          .trim();
 
         const supabase = createClient();
         const submissionId = crypto.randomUUID();
-        const extension = audioBlob.type.includes("mp4") ? "mp4" : "webm";
+        const extension = cleanMime.includes("wav")
+          ? "wav"
+          : cleanMime.includes("mp4")
+            ? "mp4"
+            : "webm";
         const storagePath = `${userId}/${challengeId}/${dayNumber}/${submissionId}.${extension}`;
 
         // Upload to private storage
         const { error: uploadError } = await supabase.storage
           .from("speaking-recordings")
-          .upload(storagePath, audioBlob, {
-            contentType: audioBlob.type,
+          .upload(storagePath, normalizedBlob, {
+            contentType: cleanMime,
             upsert: false,
           });
 
@@ -222,22 +349,30 @@ export function SpeakingStudioClient({
           dayNumber,
           storagePath,
           durationSeconds: audioDuration || recordingSeconds,
-          fileSizeBytes: audioBlob.size,
-          mimeType: audioBlob.type,
+          fileSizeBytes: normalizedBlob.size,
+          mimeType: cleanMime,
         });
 
         if (res.success) {
+          if (res.submission) {
+            const newSub = res.submission as Submission;
+            setLatestSubmitted(newSub);
+            setTranscriptionsBySubId((prev) => ({
+              ...prev,
+              [newSub.id]: buildTranscriptionDTOFromSubmission(newSub),
+            }));
+          }
           toast.success(
             res.isDayComplete
               ? `Speaking submitted! Day ${dayNumber} is fully complete! 🎉`
-              : "Speaking recording submitted successfully!"
+              : "Recording saved! Transcribe your audio below to request AI Tutor feedback."
           );
           discardRecording();
           router.refresh();
         } else {
           toast.error(res.error || "Failed to submit recording record");
         }
-      } catch (err: unknown) {
+      } catch {
         toast.error("An unexpected error occurred during submission");
       }
     });
@@ -466,6 +601,53 @@ export function SpeakingStudioClient({
               </button>
             </CardFooter>
           </Card>
+
+          {/* Transcription & AI Speaking Review for Latest Submitted Attempt */}
+          {latestSubmitted && (
+            <div className="pt-2 space-y-4">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-xs font-semibold text-muted-foreground">
+                  Latest Submitted Recording — Attempt #{latestSubmitted.attempt_number}
+                </span>
+              </div>
+
+              <SpeakingTranscriptPanel
+                key={`stt-${latestSubmitted.id}`}
+                submissionId={latestSubmitted.id}
+                hasAudioRecording={Boolean(latestSubmitted.storage_path)}
+                initialTranscription={
+                  transcriptionsBySubId[latestSubmitted.id] ??
+                  buildTranscriptionDTOFromSubmission(latestSubmitted)
+                }
+                onTranscriptionUpdated={(updated) =>
+                  setTranscriptionsBySubId((prev) => ({
+                    ...prev,
+                    [latestSubmitted.id]: updated,
+                  }))
+                }
+              />
+
+              <AiReviewPanel
+                key={`rev-${latestSubmitted.id}`}
+                submissionId={latestSubmitted.id}
+                reviewType="speaking"
+                initialReview={reviewsBySubId[latestSubmitted.id] ?? null}
+                disabled={
+                  !(
+                    transcriptionsBySubId[latestSubmitted.id] ??
+                    buildTranscriptionDTOFromSubmission(latestSubmitted)
+                  ).activeTranscript
+                }
+                disabledReason="Transcribe your recording (or enter your transcript) above to unlock AI Speaking Review."
+                onReviewGenerated={(rev) =>
+                  setReviewsBySubId((prev) => ({
+                    ...prev,
+                    [latestSubmitted.id]: rev,
+                  }))
+                }
+              />
+            </div>
+          )}
         </TabsContent>
 
         {/* History Tab */}
@@ -475,68 +657,106 @@ export function SpeakingStudioClient({
               No saved recordings yet. Record and submit your first oral response.
             </Card>
           ) : (
-            <div className="space-y-4">
-              {submittedAttempts.map((attempt) => (
-                <Card key={attempt.id} className="border shadow-2xs">
-                  <CardHeader className="py-3 px-4 bg-muted/30 border-b">
-                    <div className="flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline" className="font-mono">
-                          Attempt #{attempt.attempt_number}
-                        </Badge>
-                        <span className="text-muted-foreground">
-                          {attempt.submitted_at
-                            ? new Date(attempt.submitted_at).toLocaleString()
-                            : ""}
-                        </span>
-                      </div>
-                      {attempt.duration_seconds && (
-                        <span className="font-mono font-medium">
-                          {formatSeconds(attempt.duration_seconds)}
-                        </span>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-4 text-xs">
-                    {attempt.storage_path ? (
-                      <div className="space-y-2">
-                        {playbackUrls[attempt.id] ? (
-                          <audio
-                            src={playbackUrls[attempt.id]}
-                            controls
-                            className="w-full h-9"
-                          />
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={loadingAudioId === attempt.id}
-                            onClick={() =>
-                              loadHistoricalAudio(attempt.id, attempt.storage_path!)
-                            }
-                          >
-                            {loadingAudioId === attempt.id ? (
-                              <>
-                                <Loader2 className="size-3.5 mr-1.5 animate-spin" />
-                                Loading audio...
-                              </>
+            <div className="space-y-6">
+              {submittedAttempts.map((attempt) => {
+                const attemptTranscription =
+                  transcriptionsBySubId[attempt.id] ??
+                  buildTranscriptionDTOFromSubmission(attempt);
+
+                return (
+                  <div key={attempt.id} className="space-y-3">
+                    <Card className="border shadow-2xs">
+                      <CardHeader className="py-3 px-4 bg-muted/30 border-b">
+                        <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-mono">
+                              Attempt #{attempt.attempt_number}
+                            </Badge>
+                            <span className="text-muted-foreground">
+                              {attempt.submitted_at
+                                ? new Date(attempt.submitted_at).toLocaleString()
+                                : ""}
+                            </span>
+                          </div>
+                          {attempt.duration_seconds && (
+                            <span className="font-mono font-medium">
+                              {formatSeconds(attempt.duration_seconds)}
+                            </span>
+                          )}
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-4 text-xs">
+                        {attempt.storage_path ? (
+                          <div className="space-y-2">
+                            {playbackUrls[attempt.id] ? (
+                              <audio
+                                src={playbackUrls[attempt.id]}
+                                controls
+                                className="w-full h-9"
+                              />
                             ) : (
-                              <>
-                                <Volume2 className="size-3.5 mr-1.5" />
-                                Play Recording
-                              </>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={loadingAudioId === attempt.id}
+                                onClick={() =>
+                                  loadHistoricalAudio(
+                                    attempt.id,
+                                    attempt.storage_path!
+                                  )
+                                }
+                              >
+                                {loadingAudioId === attempt.id ? (
+                                  <>
+                                    <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                                    Loading audio...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Volume2 className="size-3.5 mr-1.5" />
+                                    Play Recording
+                                  </>
+                                )}
+                              </Button>
                             )}
-                          </Button>
+                          </div>
+                        ) : (
+                          <div className="text-muted-foreground whitespace-pre-wrap">
+                            {attempt.text_content ||
+                              "Marked completed via alternative path."}
+                          </div>
                         )}
-                      </div>
-                    ) : (
-                      <div className="text-muted-foreground whitespace-pre-wrap">
-                        {attempt.text_content || "Marked completed via alternative path."}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+                      </CardContent>
+                    </Card>
+
+                    <SpeakingTranscriptPanel
+                      submissionId={attempt.id}
+                      hasAudioRecording={Boolean(attempt.storage_path)}
+                      initialTranscription={attemptTranscription}
+                      onTranscriptionUpdated={(updated) =>
+                        setTranscriptionsBySubId((prev) => ({
+                          ...prev,
+                          [attempt.id]: updated,
+                        }))
+                      }
+                    />
+
+                    <AiReviewPanel
+                      submissionId={attempt.id}
+                      reviewType="speaking"
+                      initialReview={reviewsBySubId[attempt.id] ?? null}
+                      disabled={!attemptTranscription.activeTranscript}
+                      disabledReason="Transcribe your recording (or enter your transcript) above to unlock AI Speaking Review."
+                      onReviewGenerated={(rev) =>
+                        setReviewsBySubId((prev) => ({
+                          ...prev,
+                          [attempt.id]: rev,
+                        }))
+                      }
+                    />
+                  </div>
+                );
+              })}
             </div>
           )}
         </TabsContent>
