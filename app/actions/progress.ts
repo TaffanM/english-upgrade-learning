@@ -63,23 +63,43 @@ export async function saveSelfAssessmentAction(input: {
     return { success: false, error: "Unauthorized" };
   }
 
-  const { error } = await supabase.from("self_assessments").insert({
+  const activityType = validated.data.activityType ?? "speaking";
+  const now = new Date().toISOString();
+
+  const { data: existing } = await supabase
+    .from("self_assessments")
+    .select("id")
+    .eq("user_id", user.id)
+    .eq("challenge_day_id", validated.data.challengeDayId)
+    .eq("activity_type", activityType)
+    .maybeSingle();
+
+  const payload = {
     user_id: user.id,
     challenge_day_id: validated.data.challengeDayId,
-    activity_type: validated.data.activityType ?? null,
+    activity_type: activityType,
     fluency_score: validated.data.fluencyScore ?? null,
     grammar_score: validated.data.grammarScore ?? null,
     vocabulary_score: validated.data.vocabularyScore ?? null,
     organization_score: validated.data.organizationScore ?? null,
     confidence_score: validated.data.confidenceScore ?? null,
     notes: validated.data.notes ?? null,
-  });
+    updated_at: now,
+  };
+
+  const { error } = existing?.id
+    ? await supabase
+        .from("self_assessments")
+        .update(payload)
+        .eq("id", existing.id)
+    : await supabase.from("self_assessments").insert(payload);
 
   if (error) {
     return { success: false, error: error.message };
   }
 
   revalidatePath("/progress");
+  revalidatePath("/challenge", "layout");
   return { success: true };
 }
 

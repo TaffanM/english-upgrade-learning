@@ -267,7 +267,15 @@ export function WeeklyReviewClient({
       {/* Review Form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Productive Self-Assessment Rubric (1–5)</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-base">Productive Self-Assessment Rubric (1–5)</CardTitle>
+            {existingReview?.reviewed_at && (
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
+                <CheckCircle2 className="size-3 mr-1" />
+                Reviewed {new Date(existingReview.reviewed_at).toLocaleDateString()}
+              </Badge>
+            )}
+          </div>
           <CardDescription className="text-xs">
             Score your current productive proficiency: 1 = Basic/Frequent Hesitation, 3 = Intermediate B1, 5 = Independent B2 Mastery.
           </CardDescription>

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { uuidSchema } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/server";
 import { getAiReviewByIdForUser } from "@/lib/ai/review-service";
 import { AiReviewServiceError } from "@/lib/ai/types";
 
-const uuidParamSchema = z.string().uuid("Invalid review ID");
+const uuidParamSchema = uuidSchema("Invalid review ID");
 
 export async function GET(
   _request: NextRequest,

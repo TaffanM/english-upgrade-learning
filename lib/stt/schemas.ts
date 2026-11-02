@@ -1,7 +1,10 @@
 import { z } from "zod";
 
+const postgresUuidRegex =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const createTranscriptionRequestSchema = z.object({
-  submissionId: z.string().uuid("Invalid submission ID"),
+  submissionId: z.string().regex(postgresUuidRegex, "Invalid submission ID"),
   forceRetranscribe: z.boolean().optional().default(false),
 });
 

@@ -130,6 +130,51 @@ describe("Progression & Completion Rules", () => {
 });
 
 describe("Validation Schemas", () => {
+  const postgresUuidRegex =
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+  const uuidSchema = (msg) => z.string().regex(postgresUuidRegex, msg);
+
+  const weeklyReviewSchema = z.object({
+    phaseId: uuidSchema("Invalid phase ID"),
+    challengeId: uuidSchema("Invalid challenge ID"),
+    reflection: z.string().min(20, "Please write a substantive reflection on your week"),
+    fluencyScore: z.number().int().min(1).max(5).optional(),
+    grammarScore: z.number().int().min(1).max(5).optional(),
+    vocabularyScore: z.number().int().min(1).max(5).optional(),
+    organizationScore: z.number().int().min(1).max(5).optional(),
+    confidenceScore: z.number().int().min(1).max(5).optional(),
+    evidenceNotes: z.string().optional(),
+  });
+
+  test("weeklyReviewSchema accepts deterministic seed phase and challenge UUIDs", () => {
+    const input = {
+      phaseId: "b0000000-0000-0000-0000-000000000001",
+      challengeId: "a0000000-0000-0000-0000-000000000001",
+      reflection: "This is a comprehensive reflection exceeding twenty characters.",
+      fluencyScore: 4,
+      grammarScore: 4,
+      vocabularyScore: 4,
+      organizationScore: 4,
+      confidenceScore: 4,
+      evidenceNotes: "Targeting connectors next phase.",
+    };
+
+    const result = weeklyReviewSchema.safeParse(input);
+    assert.equal(result.success, true);
+  });
+
+  test("weeklyReviewSchema rejects invalid non-UUID strings", () => {
+    const input = {
+      phaseId: "not-a-uuid",
+      challengeId: "a0000000-0000-0000-0000-000000000001",
+      reflection: "This is a comprehensive reflection exceeding twenty characters.",
+    };
+
+    const result = weeklyReviewSchema.safeParse(input);
+    assert.equal(result.success, false);
+    assert.equal(result.error?.issues[0]?.message, "Invalid phase ID");
+  });
+
   test("loginSchema validates credentials", () => {
     assert.equal(loginSchema.safeParse({ email: "invalid", password: "123" }).success, false);
     assert.equal(

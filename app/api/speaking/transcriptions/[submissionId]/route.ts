@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
+import { uuidSchema } from "@/lib/validations";
 import { createClient } from "@/lib/supabase/server";
 import {
   getSpeakingTranscriptionForUser,
@@ -7,7 +7,7 @@ import {
 } from "@/lib/stt/stt-service";
 import { SttServiceError } from "@/lib/stt/types";
 
-const uuidParamSchema = z.string().uuid("Invalid submission ID");
+const uuidParamSchema = uuidSchema("Invalid submission ID");
 
 export async function GET(
   _request: NextRequest,

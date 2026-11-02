@@ -1,8 +1,11 @@
 import { z } from "zod";
 import { AiEvaluationResult, AiReviewServiceError } from "./types";
 
+const postgresUuidRegex =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const createAiReviewRequestSchema = z.object({
-  submissionId: z.string().uuid("Invalid submission ID"),
+  submissionId: z.string().regex(postgresUuidRegex, "Invalid submission ID"),
   forceReReview: z.boolean().optional().default(false),
 });
 
