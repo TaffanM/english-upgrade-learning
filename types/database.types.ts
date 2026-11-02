@@ -269,6 +269,14 @@ export type Database = {
           file_size_bytes: number | null;
           duration_seconds: number | null;
           word_count: number | null;
+          original_transcript: string | null;
+          edited_transcript: string | null;
+          transcription_status: "none" | "processing" | "completed" | "edited" | "failed";
+          transcription_provider: string | null;
+          transcription_model: string | null;
+          transcribed_at: string | null;
+          transcript_word_timestamps: Json | null;
+          transcription_error: string | null;
           submitted_at: string | null;
           created_at: string;
           updated_at: string;
@@ -286,6 +294,14 @@ export type Database = {
           file_size_bytes?: number | null;
           duration_seconds?: number | null;
           word_count?: number | null;
+          original_transcript?: string | null;
+          edited_transcript?: string | null;
+          transcription_status?: "none" | "processing" | "completed" | "edited" | "failed";
+          transcription_provider?: string | null;
+          transcription_model?: string | null;
+          transcribed_at?: string | null;
+          transcript_word_timestamps?: Json | null;
+          transcription_error?: string | null;
           submitted_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -303,6 +319,14 @@ export type Database = {
           file_size_bytes?: number | null;
           duration_seconds?: number | null;
           word_count?: number | null;
+          original_transcript?: string | null;
+          edited_transcript?: string | null;
+          transcription_status?: "none" | "processing" | "completed" | "edited" | "failed";
+          transcription_provider?: string | null;
+          transcription_model?: string | null;
+          transcribed_at?: string | null;
+          transcript_word_timestamps?: Json | null;
+          transcription_error?: string | null;
           submitted_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -540,6 +564,72 @@ export type Database = {
           },
           {
             foreignKeyName: "weekly_reviews_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      ai_reviews: {
+        Row: {
+          id: string;
+          user_id: string;
+          submission_id: string;
+          review_type: "speaking" | "writing";
+          model_name: string;
+          review_version: number;
+          overall_feedback: string;
+          scores: Json;
+          strengths: Json;
+          improvements: Json;
+          corrections: Json;
+          recommended_practice: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          submission_id: string;
+          review_type: "speaking" | "writing";
+          model_name: string;
+          review_version?: number;
+          overall_feedback: string;
+          scores: Json;
+          strengths?: Json;
+          improvements?: Json;
+          corrections?: Json;
+          recommended_practice?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          submission_id?: string;
+          review_type?: "speaking" | "writing";
+          model_name?: string;
+          review_version?: number;
+          overall_feedback?: string;
+          scores?: Json;
+          strengths?: Json;
+          improvements?: Json;
+          corrections?: Json;
+          recommended_practice?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "ai_reviews_submission_id_fkey";
+            columns: ["submission_id"];
+            isOneToOne: true;
+            referencedRelation: "activity_submissions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "ai_reviews_user_id_fkey";
             columns: ["user_id"];
             isOneToOne: false;
             referencedRelation: "profiles";

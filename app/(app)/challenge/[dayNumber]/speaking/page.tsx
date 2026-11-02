@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { mapRowToAiReviewDTO } from "@/lib/ai/review-service";
+import { AiReviewRecordDTO } from "@/lib/ai/types";
 import { ErrorFallback } from "@/components/ui/error-fallback";
 import { SpeakingStudioClient } from "@/features/speaking/SpeakingStudioClient";
 
@@ -75,6 +77,20 @@ async function SpeakingStudioContent({
     .eq("activity_id", activity.id)
     .order("attempt_number", { ascending: false });
 
+  const submittedIds = (submissions ?? []).map((s) => s.id);
+  const initialReviewsBySubmissionId: Record<string, AiReviewRecordDTO> = {};
+  if (submittedIds.length > 0) {
+    const { data: reviewRows } = await supabase
+      .from("ai_reviews")
+      .select("*")
+      .eq("user_id", user.id)
+      .in("submission_id", submittedIds);
+
+    for (const row of reviewRows ?? []) {
+      initialReviewsBySubmissionId[row.submission_id] = mapRowToAiReviewDTO(row);
+    }
+  }
+
   return (
     <SpeakingStudioClient
       dayNumber={dayNum}
@@ -82,6 +98,7 @@ async function SpeakingStudioContent({
       userId={user.id}
       activity={activity}
       submittedAttempts={submissions || []}
+      initialReviewsBySubmissionId={initialReviewsBySubmissionId}
     />
   );
 }
