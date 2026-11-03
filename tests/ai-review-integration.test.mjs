@@ -90,7 +90,7 @@ function createReviewHarness(options = {}) {
         userId,
         submissionId,
         reviewType: expectedType,
-        modelName: "google/diffusiongemma-26b-a4b-it",
+        modelName: "nvidia/nemotron-3.5-bolt-e4b",
         reviewVersion: nextVersion,
         evaluatedTextSnapshot: textToEvaluate,
         overallScore: 82,
@@ -153,7 +153,7 @@ describe("AI Review Integration Tests — End-to-End Workflows", () => {
     });
     assert.equal(first.status, 201);
     assert.equal(first.cached, false);
-    assert.equal(first.review.modelName, "google/diffusiongemma-26b-a4b-it");
+    assert.equal(first.review.modelName, "nvidia/nemotron-3.5-bolt-e4b");
     assert.equal(first.review.reviewVersion, 1);
     assert.equal(harness.getLlmCallCount(), 1);
 

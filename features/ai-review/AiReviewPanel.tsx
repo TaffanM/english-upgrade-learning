@@ -113,9 +113,29 @@ export function AiReviewPanel({
 
       const payload = await response.json();
       if (!response.ok) {
-        const message =
-          payload?.error || "Could not generate AI Tutor feedback.";
-        setErrorState({ message, code: payload?.code });
+        let message = "Could not generate AI Tutor feedback.";
+        if (typeof payload?.error === "string") {
+          message = payload.error;
+        } else if (typeof payload?.error?.message === "string") {
+          message = payload.error.message;
+        } else if (
+          payload?.error?.code === "FUNCTION_INVOCATION_TIMEOUT" ||
+          response.status === 504
+        ) {
+          message =
+            "The AI Tutor request timed out upstream. Please try again.";
+        } else if (typeof payload?.message === "string") {
+          message = payload.message;
+        }
+
+        const code =
+          payload?.code ||
+          (typeof payload?.error === "object"
+            ? payload?.error?.code
+            : undefined) ||
+          (response.status === 504 ? "PROVIDER_TIMEOUT" : "API_ERROR");
+
+        setErrorState({ message, code });
         toast.error(message);
         return;
       }

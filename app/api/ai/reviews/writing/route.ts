@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { generateOrGetAiReview } from "@/lib/ai/review-service";
 import { AiReviewServiceError } from "@/lib/ai/types";
 
+// Allow up to 60 seconds on Vercel Serverless Functions to prevent 504 timeouts during AI evaluation
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
