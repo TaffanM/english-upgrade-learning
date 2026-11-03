@@ -27,7 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={cn("h-full antialiased font-sans", figtree.variable)}>
-      <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden">
+      <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-clip">
         {children}
         <Toaster position="top-right" />
       </body>

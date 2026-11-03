@@ -6,16 +6,24 @@ import { HeaderAuthButton } from "@/components/layout/HeaderAuthButton";
 import { Footer } from "@/components/layout/Footer";
 import { Logo } from "@/components/ui/logo";
 import { TextLoop } from "@/components/ui/TextLoop";
+import { SplitText } from "@/components/ui/SplitText";
+import ScrollStack, { ScrollStackItem } from "@/components/ui/ScrollStack";
 import {
   ArrowRight,
+  Calendar,
   CheckCircle2,
   Clock,
+  Coffee,
   Compass,
+  Cookie,
   Mic,
   PenLine,
   Shield,
+  ShieldCheck,
   Smile,
   Sparkles,
+  Sprout,
+  Timer,
   Volume2,
   Zap,
 } from "lucide-react";
@@ -24,51 +32,81 @@ export default function HomePage() {
   const phases = [
     {
       number: 1,
-      badge: "🌱 Week 1",
+      badge: "Week 1",
       days: "Days 1–7",
       title: "Build the habit & baseline",
       focus: "Establish your daily 30-min groove and record baseline speaking and writing samples.",
-      color: "bg-amber-100 text-amber-900 border-amber-200",
+      badgeColor: "bg-amber-100 text-amber-900 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800",
+      cardBg: "bg-gradient-to-br from-card via-card to-amber-500/10",
+      borderColor: "border-amber-300/80 dark:border-amber-900/60",
+      accentColor: "text-amber-600 dark:text-amber-400",
+      pillBg: "bg-amber-500/10 text-amber-700 dark:text-amber-300",
+      glow: "shadow-amber-500/5",
     },
     {
       number: 2,
-      badge: "💬 Week 2",
+      badge: "Week 2",
       days: "Days 8–14",
       title: "Opinions & comparisons",
       focus: "Express nuanced viewpoints, weigh pros & cons, and practice comparative linkers.",
-      color: "bg-sky-100 text-sky-900 border-sky-200",
+      badgeColor: "bg-sky-100 text-sky-900 border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-800",
+      cardBg: "bg-gradient-to-br from-card via-card to-sky-500/10",
+      borderColor: "border-sky-300/80 dark:border-sky-900/60",
+      accentColor: "text-sky-600 dark:text-sky-400",
+      pillBg: "bg-sky-500/10 text-sky-700 dark:text-sky-300",
+      glow: "shadow-sky-500/5",
     },
     {
       number: 3,
-      badge: "💡 Week 3",
+      badge: "Week 3",
       days: "Days 15–21",
       title: "Develop and support ideas",
       focus: "Build extended paragraphs using examples, cause-and-effect, and problem-solution frames.",
-      color: "bg-emerald-100 text-emerald-900 border-emerald-200",
+      badgeColor: "bg-emerald-100 text-emerald-900 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800",
+      cardBg: "bg-gradient-to-br from-card via-card to-emerald-500/10",
+      borderColor: "border-emerald-300/80 dark:border-emerald-900/60",
+      accentColor: "text-emerald-600 dark:text-emerald-400",
+      pillBg: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+      glow: "shadow-emerald-500/5",
     },
     {
       number: 4,
-      badge: "🎯 Week 4",
+      badge: "Week 4",
       days: "Days 22–28",
       title: "Abstract topics & precision",
       focus: "Navigate ethical dilemmas, modal verbs of deduction, and active vs. passive nuance.",
-      color: "bg-purple-100 text-purple-900 border-purple-200",
+      badgeColor: "bg-purple-100 text-purple-900 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800",
+      cardBg: "bg-gradient-to-br from-card via-card to-purple-500/10",
+      borderColor: "border-purple-300/80 dark:border-purple-900/60",
+      accentColor: "text-purple-600 dark:text-purple-400",
+      pillBg: "bg-purple-500/10 text-purple-700 dark:text-purple-300",
+      glow: "shadow-purple-500/5",
     },
     {
       number: 5,
-      badge: "🚀 Week 5",
+      badge: "Week 5",
       days: "Days 29–35",
       title: "B2-style extended discourse",
       focus: "Multi-paragraph flow, nominalization, diplomatic balance, and unscripted confidence.",
-      color: "bg-orange-100 text-orange-900 border-orange-200",
+      badgeColor: "bg-orange-100 text-orange-900 border-orange-200 dark:bg-orange-950/60 dark:text-orange-300 dark:border-orange-800",
+      cardBg: "bg-gradient-to-br from-card via-card to-orange-500/10",
+      borderColor: "border-orange-300/80 dark:border-orange-900/60",
+      accentColor: "text-orange-600 dark:text-orange-400",
+      pillBg: "bg-orange-500/10 text-orange-700 dark:text-orange-300",
+      glow: "shadow-orange-500/5",
     },
     {
       number: 6,
-      badge: "🏆 Week 6",
+      badge: "Week 6",
       days: "Days 36–41",
       title: "Timed practice & grand finale",
       focus: "Simulated exam timing, error self-correction, and the Day 1 vs. Day 41 growth audit.",
-      color: "bg-rose-100 text-rose-900 border-rose-200",
+      badgeColor: "bg-rose-100 text-rose-900 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800",
+      cardBg: "bg-gradient-to-br from-card via-card to-rose-500/10",
+      borderColor: "border-rose-300/80 dark:border-rose-900/60",
+      accentColor: "text-rose-600 dark:text-rose-400",
+      pillBg: "bg-rose-500/10 text-rose-700 dark:text-rose-300",
+      glow: "shadow-rose-500/5",
     },
   ];
 
@@ -91,8 +129,9 @@ export default function HomePage() {
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-3">
-            <Badge variant="cute" className="hidden sm:inline-flex text-[11px] animate-scale-in">
-              🗓️ 31 Oct – 10 Dec 2026
+            <Badge variant="cute" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] animate-scale-in">
+              <Calendar className="size-3 text-primary shrink-0" />
+              <span>31 Oct – 10 Dec 2026</span>
             </Badge>
             <HeaderAuthButton variant="sm" />
           </div>
@@ -103,17 +142,50 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="pt-12 md:pt-20 px-4 max-w-5xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary text-secondary-foreground border border-border/80 text-xs font-semibold shadow-2xs animate-fade-up">
-            <span className="text-base">🥐</span>
+            <Cookie className="size-4 text-primary shrink-0" />
             <span>Your 30-minute daily English bite</span>
             <span className="text-muted-foreground">•</span>
             <span className="text-primary font-bold">41 Days</span>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground max-w-3xl mx-auto leading-[1.12] animate-fade-up stagger-1">
-            Speak naturally. <br className="hidden sm:inline" />
-            Write fearlessly. <br className="hidden sm:inline" />
-            <span className="text-primary underline decoration-wavy decoration-primary/40 underline-offset-8">
-              Grow every single day.
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight text-foreground max-w-3xl mx-auto leading-[1.12]">
+            <span className="animate-fade-up stagger-1 inline-block">
+              Speak naturally. <br className="hidden sm:inline" />
+              Write fearlessly. <br className="hidden sm:inline" />
+            </span>
+            <span className="relative inline-block text-primary">
+              <SplitText
+                tag="span"
+                text="Grow every single day."
+                effect="flip"
+                splitType="chars"
+                delay={50}
+                duration={1.25}
+                trigger="view"
+                hoverEffect="lift"
+              />
+              <svg
+                aria-hidden="true"
+                className="absolute left-0 -bottom-2 md:-bottom-2.5 w-full h-2 md:h-2.5 text-primary/40 pointer-events-none overflow-visible"
+              >
+                <defs>
+                  <pattern
+                    id="hero-wavy-underline"
+                    width="16"
+                    height="10"
+                    patternUnits="userSpaceOnUse"
+                  >
+                    <path
+                      d="M 0 5 Q 4 1, 8 5 T 16 5"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                    />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#hero-wavy-underline)" />
+              </svg>
             </span>
           </h1>
 
@@ -220,7 +292,10 @@ export default function HomePage() {
         <section id="routine" className="py-16 bg-muted/40 border-y border-border/80 px-4">
           <div className="max-w-5xl mx-auto space-y-10">
             <div className="text-center max-w-xl mx-auto space-y-2">
-              <Badge variant="cute" className="animate-scale-in">⏱️ Timeboxed & Low Stress</Badge>
+              <Badge variant="cute" className="animate-scale-in inline-flex items-center gap-1.5">
+                <Timer className="size-3.5 text-primary shrink-0" />
+                <span>Timeboxed & Low Stress</span>
+              </Badge>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 The Daily 30-Minute Rhythm
               </h2>
@@ -327,42 +402,94 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* 6 Phases Stepping Stones */}
-        <section className="py-8 px-4 max-w-5xl mx-auto space-y-10">
+        {/* 6 Phases Stepping Stones with ScrollStack */}
+        <section className="py-16 px-4 max-w-5xl mx-auto space-y-10">
           <div className="text-center max-w-xl mx-auto space-y-2">
-            <Badge variant="cute">🗺️ The 6-Week Roadmap</Badge>
+            <Badge variant="cute" className="inline-flex items-center gap-1.5">
+              <Compass className="size-3.5 text-primary shrink-0" />
+              <span>The 6-Week Roadmap</span>
+            </Badge>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
               From B1 Baseline to B2 Polish
             </h2>
             <p className="text-xs sm:text-sm text-muted-foreground">
-              Each phase introduces targeted linguistic skills without overwhelming you.
+              Each phase introduces targeted linguistic skills without overwhelming you. Scroll down to unpack each week&apos;s milestone.
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {phases.map((phase) => (
-              <Card
-                key={phase.number}
-                className="card-hover-lift flex flex-col justify-between"
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${phase.color}`}>
-                      {phase.badge}
+          <div className="max-w-2xl mx-auto w-full">
+            <ScrollStack
+              useWindowScroll={true}
+              smoothScroll={true}
+              stackPosition="120px"
+              itemDistance={30}
+              itemStackDistance={24}
+              itemScale={0.04}
+              baseScale={0.86}
+              dimAmount={0.12}
+              rotationAmount={1}
+              holdDistance={130}
+            >
+              {phases.map((phase) => (
+                <ScrollStackItem
+                  key={phase.number}
+                  itemClassName={`flex flex-col justify-between p-5 sm:p-6 min-h-[13.5rem] sm:min-h-[14.5rem] !h-auto border shadow-xl ${phase.cardBg} ${phase.borderColor} ${phase.glow} transition-colors`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={`flex size-6 items-center justify-center rounded-full font-mono text-xs font-bold ${phase.pillBg}`}>
+                          {phase.number}
+                        </span>
+                        <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${phase.badgeColor}`}>
+                          {phase.badge}
+                        </span>
+                      </div>
+                      <span className="font-mono text-xs font-medium text-muted-foreground bg-muted/80 px-2.5 py-0.5 rounded-md border border-border/40">
+                        {phase.days}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+                        {phase.title}
+                      </h3>
+                      <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                        {phase.focus}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1.5 font-medium text-foreground">
+                      <CheckCircle2 className={`size-4 ${phase.accentColor}`} /> Phase {phase.number} Milestone
                     </span>
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {phase.days}
+                    <span className="font-mono text-[11px] text-muted-foreground/80">
+                      Step {phase.number} of 6
                     </span>
                   </div>
-                  <CardTitle className="text-base font-bold">{phase.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    {phase.focus}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+                </ScrollStackItem>
+              ))}
+            </ScrollStack>
+
+            {/* Bouncy Expand CTA Button to Login */}
+            <div className="pt-10 sm:pt-14 pb-2 flex flex-col items-center justify-center text-center space-y-3">
+              <Link
+                href="/login"
+                className="group btn-bouncy-expand relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-primary text-primary-foreground font-bold text-base sm:text-lg shadow-lg shadow-primary/25 hover:shadow-2xl hover:shadow-primary/40 cursor-pointer"
+              >
+                <span>Start Your 41-Day Journey</span>
+                <span className="flex size-7 items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:translate-x-1.5 group-hover:scale-110">
+                  <ArrowRight className="size-4" />
+                </span>
+              </Link>
+              <p className="text-xs text-muted-foreground font-medium">
+                Ready to upgrade your speaking and writing?{" "}
+                <Link href="/login" className="text-primary hover:underline font-semibold">
+                  Log in to get started &rarr;
+                </Link>
+              </p>
+            </div>
           </div>
         </section>
 
@@ -374,24 +501,30 @@ export default function HomePage() {
             </h3>
 
             <div className="grid sm:grid-cols-3 gap-6 text-center sm:text-left">
-              <div className="bg-card p-5 rounded-2xl border shadow-2xs space-y-2 card-hover-lift">
-                <span className="text-2xl inline-block animate-breathe">☕</span>
+              <div className="bg-card p-5 rounded-2xl border shadow-2xs space-y-3 card-hover-lift">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 mx-auto sm:mx-0">
+                  <Coffee className="size-5" />
+                </div>
                 <h4 className="font-bold text-sm">No Backlog Anxiety</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Missed yesterday? You never have to do double the work. The platform simply resumes from your lowest incomplete day.
                 </p>
               </div>
 
-              <div className="bg-card p-5 rounded-2xl border shadow-2xs space-y-2 card-hover-lift">
-                <span className="text-2xl inline-block animate-breathe">🌱</span>
+              <div className="bg-card p-5 rounded-2xl border shadow-2xs space-y-3 card-hover-lift">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mx-auto sm:mx-0">
+                  <Sprout className="size-5" />
+                </div>
                 <h4 className="font-bold text-sm">Mistakes Are Welcome</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   First drafts are for genuine thinking. Automatic translators rob you of neural retrieval. Draft raw first; refine second.
                 </p>
               </div>
 
-              <div className="bg-card p-5 rounded-2xl border shadow-2xs space-y-2 card-hover-lift">
-                <span className="text-2xl inline-block animate-breathe">🔐</span>
+              <div className="bg-card p-5 rounded-2xl border shadow-2xs space-y-3 card-hover-lift">
+                <div className="flex size-10 items-center justify-center rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400 mx-auto sm:mx-0">
+                  <ShieldCheck className="size-5" />
+                </div>
                 <h4 className="font-bold text-sm">Private & Protected</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   No public feeds, no vanity leaderboards. All your voice recordings and essays are securely encrypted and private to you.

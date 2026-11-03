@@ -1,0 +1,72 @@
+.scroll-stack {
+  position: relative;
+  width: 100%;
+}
+
+.scroll-stack--contained {
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted-foreground) / 0.25) transparent;
+}
+
+.scroll-stack--contained::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scroll-stack--contained::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-stack--contained::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.25);
+  border-radius: 9999px;
+}
+
+.scroll-stack__inner {
+  position: relative;
+  padding-inline: clamp(0.75rem, 4%, 2.5rem);
+}
+
+.scroll-stack__slot {
+  position: sticky;
+}
+
+.scroll-stack-card {
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 14rem;
+  padding: 1.5rem;
+  border-radius: 24px;
+  background-color: var(--card, #ffffff);
+  color: var(--card-foreground, #1c1917);
+  border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+  box-shadow:
+    0 0 0 1px var(--border, rgba(0, 0, 0, 0.08)),
+    0 -8px 24px -10px rgba(0, 0, 0, 0.08),
+    0 16px 36px -16px rgba(0, 0, 0, 0.12);
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+
+.dark .scroll-stack-card {
+  background-color: var(--card, #1c1917);
+  color: var(--card-foreground, #fafaf9);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  box-shadow:
+    0 0 0 1px var(--border, rgba(255, 255, 255, 0.1)),
+    0 -12px 32px -12px rgba(0, 0, 0, 0.5),
+    0 24px 48px -20px rgba(0, 0, 0, 0.6);
+}
+
+.scroll-stack-card__shade {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #000;
+  opacity: var(--scroll-stack-dim, 0);
+  pointer-events: none;
+}
