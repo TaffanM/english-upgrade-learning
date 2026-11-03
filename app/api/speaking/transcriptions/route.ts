@@ -3,6 +3,9 @@ import { createClient } from "@/lib/supabase/server";
 import { transcribeSpeakingSubmission } from "@/lib/stt/stt-service";
 import { SttServiceError } from "@/lib/stt/types";
 
+// Allow up to 60 seconds on Vercel Serverless Functions to prevent 504 timeouts during audio transcription
+export const maxDuration = 60;
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();

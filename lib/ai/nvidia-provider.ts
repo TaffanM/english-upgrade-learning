@@ -14,19 +14,19 @@ try {
 }
 
 export const NVIDIA_NIM_BASE_URL = "https://integrate.api.nvidia.com/v1";
-export const DEFAULT_NVIDIA_MODEL = "google/diffusiongemma-26b-a4b-it";
+export const DEFAULT_NVIDIA_MODEL = "nvidia/nemotron-3.5-bolt-e4b";
 export const DEFAULT_NVIDIA_FALLBACK_MODELS = [
-  "nvidia/nemotron-3.5-bolt-e4b",
+  "nvidia/nemotron-3.5-lightning-30b-a3b",
+  "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
 ];
 
 /**
- * When fallback models are available, bound the primary model attempt so a stalled
- * NVCF function queue (such as openai/gpt-oss-20b returning 504 on NVCF) fails over
- * quickly instead of holding the browser request until a 504 Gateway Timeout.
+ * When fallback models are available, bound attempts so stalled models fail over
+ * cleanly while remaining comfortably within the 60-second serverless execution window.
  */
-const PRIMARY_ATTEMPT_WITH_FALLBACK_TIMEOUT_MS = 5_500;
-const FALLBACK_ATTEMPT_TIMEOUT_MS = 22_000;
-const SINGLE_MODEL_TIMEOUT_MS = 30_000;
+const PRIMARY_ATTEMPT_WITH_FALLBACK_TIMEOUT_MS = 35_000;
+const FALLBACK_ATTEMPT_TIMEOUT_MS = 20_000;
+const SINGLE_MODEL_TIMEOUT_MS = 50_000;
 const UNHEALTHY_MODEL_COOLDOWN_MS = 15 * 60 * 1000;
 
 const unhealthyModelUntil = new Map<string, number>();
@@ -117,8 +117,13 @@ export class NvidiaNimEvaluationProvider implements AiEvaluationProvider {
     baseUrl?: string;
   }) {
     this.apiKey = options?.apiKey || process.env.NVIDIA_API_KEY || "";
-    this.modelName =
+    let configuredModel =
       options?.modelName || process.env.NVIDIA_MODEL || DEFAULT_NVIDIA_MODEL;
+    // Automatically map known stalled/broken diffusion models to DEFAULT_NVIDIA_MODEL
+    if (configuredModel.includes("diffusiongemma")) {
+      configuredModel = DEFAULT_NVIDIA_MODEL;
+    }
+    this.modelName = configuredModel;
     this.baseUrl = (
       options?.baseUrl ||
       process.env.NVIDIA_BASE_URL ||
@@ -128,7 +133,7 @@ export class NvidiaNimEvaluationProvider implements AiEvaluationProvider {
     const envFallbacks = (process.env.NVIDIA_FALLBACK_MODELS || "")
       .split(",")
       .map((m) => m.trim())
-      .filter(Boolean);
+      .filter((m) => m && !m.includes("diffusiongemma"));
 
     const rawFallbacks =
       options?.fallbackModels ??
@@ -195,9 +200,10 @@ export class NvidiaNimEvaluationProvider implements AiEvaluationProvider {
               role: m.role,
               content: m.content,
             })),
+            chat_template_kwargs: { enable_thinking: false },
             temperature: 0.2,
             top_p: 0.9,
-            max_tokens: 2048,
+            max_tokens: 1200,
           },
         });
 
@@ -265,8 +271,12 @@ export class NvidiaNimEvaluationProvider implements AiEvaluationProvider {
         }
 
         const message = parsed.choices?.[0]?.message;
+        const text = (parsed.choices?.[0] as unknown as { text?: string })?.text;
         const content =
-          message?.content?.trim() || message?.reasoning_content?.trim() || "";
+          message?.content?.trim() ||
+          message?.reasoning_content?.trim() ||
+          text?.trim() ||
+          "";
 
         if (!content) {
           unhealthyModelUntil.set(

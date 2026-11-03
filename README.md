@@ -13,7 +13,7 @@ A single-learner English learning web application built with **Next.js 16 (App R
   - Server-side transcription powered by **NVIDIA Parakeet CTC 1.1B ASR** (`nvidia/parakeet-ctc-1_1b-asr` via NVCF) with configurable fallback support for **Groq Whisper Large V3 Turbo** (`whisper-large-v3-turbo`).
   - Editable transcript workflow that preserves both the raw ASR output (`original_transcript`) and learner-corrected text (`edited_transcript`).
 - **AI Writing & Speaking Tutor (NVIDIA NIM):**
-  - Curriculum-aware B1→B2 evaluations powered by NVIDIA NIM (`google/diffusiongemma-26b-a4b-it` with automatic fallback to `nvidia/nemotron-3.5-bolt-e4b`).
+  - Curriculum-aware B1→B2 evaluations powered by NVIDIA NIM (`nvidia/nemotron-3.5-bolt-e4b` with automatic fallback to `nvidia/nemotron-3.5-lightning-30b-a3b`).
   - Provides 4-dimension scores (`0–100`), strengths, areas for improvement, clause-level corrections with explanations, and follow-up exercises.
 
 ---
@@ -28,7 +28,7 @@ Copy `.env.example` to `.env.local` for local development. **Never commit `.env.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public | Supabase anonymous/publishable key |
 | `DATABASE_URL` | Server / CLI | Supabase PostgreSQL connection pooler URI (used by `npm run db:push`) |
 | `NVIDIA_API_KEY` | **Server-Only** | NVIDIA API Catalog / NIM secret key (`nvapi-...`) |
-| `NVIDIA_MODEL` | **Server-Only** | NVIDIA NIM chat model ID (default: `google/diffusiongemma-26b-a4b-it`) |
+| `NVIDIA_MODEL` | **Server-Only** | NVIDIA NIM chat model ID (default: `nvidia/nemotron-3.5-bolt-e4b`) |
 | `STT_PROVIDER` | **Server-Only** | `nvidia` (default, Parakeet CTC 1.1B) or `groq` (Whisper Large V3 Turbo fallback) |
 | `NVIDIA_ASR_ENDPOINT` | **Server-Only** | NVCF HTTP invocation URL for `nvidia/parakeet-ctc-1_1b-asr` |
 | `NVIDIA_ASR_MODEL` | **Server-Only** | `nvidia/parakeet-ctc-1_1b-asr` |
@@ -81,7 +81,7 @@ npm run dev
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `NVIDIA_API_KEY` (Server-only; ensure it is not exposed via `NEXT_PUBLIC_`)
-   - `NVIDIA_MODEL` (`google/diffusiongemma-26b-a4b-it`)
+   - `NVIDIA_MODEL` (`nvidia/nemotron-3.5-bolt-e4b`)
    - `STT_PROVIDER` (`nvidia`)
 2. **Apply Database Migration:**
    Ensure `0006_add_stt_and_ai_reviews.sql` has been applied to the production Supabase database via `npm run db:push`.
