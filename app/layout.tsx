@@ -14,9 +14,12 @@ export const metadata: Metadata = {
   description:
     "Intensive single-learner productive skills challenge: 15 minutes Speaking + 15 minutes Writing daily.",
   icons: {
-    icon: "/logo.svg",
-    shortcut: "/logo.svg",
-    apple: "/logo.svg",
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/apple-icon.png",
   },
 };
 
