@@ -254,6 +254,39 @@
   transform: translateY(-3px);
 }
 
+/* SplitText Animation Utilities */
+.split-parent {
+  display: inline-block;
+}
+
+.split-char,
+.split-word,
+.split-line {
+  display: inline-block !important;
+  position: relative;
+  will-change: transform, opacity;
+}
+
+/* Bouncy Expand Button */
+.btn-bouncy-expand {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              padding 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.35s ease,
+              background-color 0.2s ease;
+  will-change: transform, padding;
+}
+
+.btn-bouncy-expand:hover {
+  transform: scale(1.07) translateY(-3px);
+  padding-left: 2.75rem;
+  padding-right: 2.75rem;
+}
+
+.btn-bouncy-expand:active {
+  transform: scale(0.95) translateY(1px);
+  transition-duration: 0.1s;
+}
+
 /* Reduced Motion for Accessibility */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
